@@ -1,0 +1,27 @@
+{
+  "title": "暂歇",
+  "slug": "truce",
+  "quote": "傍晚应该是\n一段忧伤的喘息。",
+  "intent": "压力暂时松开，余热仍在。滑动对照眼前的灼热与想象的傍晚。",
+  "source": {
+    "status": "work-confirmed-translation-unverified",
+    "label": "加缪《局外人》第一部第一章",
+    "context_note": "叙述发生于母亲葬礼段落的白昼，傍晚是由母亲生前散步引出的想象。用户提供的中文译者及版本未可靠确认。",
+    "urls": [
+      "https://www.fadedpage.com/books/20150715/html.php"
+    ]
+  },
+  "caption": "加缪《局外人》 · 第一部第一章",
+  "typography": {
+    "position": "top-left",
+    "color": "#303c3c",
+    "caption_color": "#e0d4c2"
+  },
+  "parameter": {
+    "label": "想象的傍晚",
+    "uniform": "evening",
+    "default": 1
+  },
+  "uniforms": {},
+  "start_time": 11
+}

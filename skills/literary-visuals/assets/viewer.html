@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; media-src blob:; connect-src 'none'; base-uri 'none'; form-action 'none'">
+<title>__TITLE__</title>
+<style>
+:root{color-scheme:light dark;--bg:light-dark(#eeede7,#16171a);--ink:light-dark(#27282b,#e2e1dc);--dim:light-dark(#62636a,#aaabb0);--line:light-dark(#c8c9cd,#44464d)}*{box-sizing:border-box}body{margin:0;padding:32px 20px 48px;background:var(--bg);color:var(--ink);font:14px/1.6 -apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif}main{max-width:480px;margin:auto}header{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:16px}h1{font:400 23px/1.4 "Songti SC","STSong",serif;letter-spacing:.12em;margin:0}#kind{font-size:11px;color:var(--dim)}figure{margin:0}canvas{display:block;width:100%;aspect-ratio:4/5;background:#777}button,input{font:inherit}button{padding:9px 12px;min-height:40px;border:1px solid var(--line);border-radius:0;background:transparent;color:var(--ink);cursor:pointer}button:hover{background:light-dark(#dddde540,#ffffff08)}button:disabled{opacity:.5;cursor:wait}button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(--ink);outline-offset:4px}.row{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-top:14px}.parameter{display:flex;gap:9px;align-items:center;margin-left:auto;color:var(--dim);font-size:12px}.parameter input{width:100px;accent-color:var(--ink)}#export-row button{flex:1}#status{font-size:12px;color:var(--dim);min-height:1.6em;margin:10px 0}details{border-top:1px solid var(--line);padding-top:12px;margin-top:18px;color:var(--dim);font-size:12px}summary{cursor:pointer}#source-links{display:flex;gap:16px;flex-wrap:wrap}a{color:inherit}#source-note{white-space:pre-wrap}#error{padding:16px;border:1px solid var(--line)}[hidden]{display:none!important}@media(max-width:380px){header{display:block}#kind{display:block;margin-top:6px}body{padding:20px 12px}.parameter{margin-left:0;width:100%;justify-content:space-between}button{min-height:44px}#kind{max-width:125px}}
+</style>
+</head>
+<body><main>
+<header><h1 id="title"></h1><span id="kind">文学意象 · 动态作品</span></header>
+<figure><canvas id="art" role="img"></canvas><p id="error" role="alert" hidden></p></figure>
+<div class="row"><button id="pause" type="button" aria-pressed="false">暂停动效</button><button id="words" type="button" aria-pressed="false">隐去文字</button><label class="parameter"><span id="parameter-label"></span><input id="parameter" type="range" min="0" max="100" aria-label="画面参数"></label></div>
+<div id="export-row" class="row"><button id="png" type="button">保存高清图片</button><button id="video" type="button">导出 12 秒视频</button><button id="cancel" type="button" hidden>取消录制</button></div>
+<p id="status" aria-live="polite"></p>
+<details><summary>文字出处与创作说明</summary><p id="source-note"></p><div id="source-links"></div></details>
+</main>
+<script>
+const SPEC=__SPEC__;
+const FRAGMENT=__SHADER__;
+__RUNTIME__
+</script>
+</body></html>

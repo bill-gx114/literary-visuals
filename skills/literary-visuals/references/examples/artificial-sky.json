@@ -1,0 +1,25 @@
+{
+  "title": "伪天",
+  "slug": "artificial-sky",
+  "quote": "空气闻起来像塑料，\n地平线就像凝胶。",
+  "intent": "苍白薄膜、煤黑软块的局部搏动、凝胶层片的挤压和记忆残影。标题由本次创作提出。",
+  "source": {
+    "status": "unverified",
+    "label": "用户提供的摘抄 · 出处未确认",
+    "context_note": "有限的中文精确短语及英文意象组合检索未获得可靠匹配；未署作者或书名。",
+    "urls": []
+  },
+  "caption": "像搏动着的黑暗之心",
+  "typography": {
+    "position": "top-left",
+    "color": "#34343f",
+    "caption_color": "#d0cfd9"
+  },
+  "parameter": {
+    "label": "扰动",
+    "uniform": "force",
+    "default": 0.45
+  },
+  "uniforms": {},
+  "start_time": 3
+}

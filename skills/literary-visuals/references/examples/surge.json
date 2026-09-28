@@ -1,0 +1,28 @@
+{
+  "title": "涌 · 时间的切面",
+  "slug": "surge",
+  "quote": "星垂平野阔\n月涌大江流",
+  "intent": "细密层理与广阔色域形成尺度反差，朱砂与墨色的切面缓慢推进。",
+  "source": {
+    "status": "confirmed",
+    "label": "杜甫《旅夜书怀》",
+    "context_note": "2026-09-28 对照全诗核实。前有独夜舟，后以天地间沙鸥自况；本次以细密层理与广阔空域的反差表达尺度和漂泊感，矿物配色是艺术选择。",
+    "urls": [
+      "https://zh.wikisource.org/wiki/旅夜書懷"
+    ]
+  },
+  "caption": "杜甫《旅夜书怀》",
+  "typography": {
+    "position": "top-right-vertical",
+    "color": "#f1deba"
+  },
+  "parameter": {
+    "label": "流势",
+    "uniform": "force",
+    "default": 0.55
+  },
+  "uniforms": {
+    "mode": 2
+  },
+  "start_time": 14
+}

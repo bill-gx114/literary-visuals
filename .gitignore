@@ -1,0 +1,11 @@
+node_modules/
+.remotion/
+.DS_Store
+__pycache__/
+*.pyc
+*.log
+output/
+notes/
+.env
+.env.*
+!.env.example
