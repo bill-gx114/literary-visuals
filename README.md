@@ -10,9 +10,10 @@
 
 ## 创作方法
 
-1. **查出处**：核对原作与上下文，区分已核实、译本未确认和出处未知。
-2. **读意象**：理解情绪、尺度、材质与动作关系，避免把名词逐一配成图。
-3. **成作品**：以构图和缓慢运动回应文本，提供独立 HTML、高清图片和短片。
+1. **先选择**：通过宿主交互框确认画面表达、图片／视频／HTML、带平台用途提示的尺寸，以及带字／无字版本。已提供的选项不重复问。
+2. **查出处**：核对原作与上下文，区分已核实、译本未确认和出处未知。
+3. **读意象**：理解情绪、尺度、材质与动作关系，避免把名词逐一配成图。
+4. **成作品**：按选择的格式、尺寸和文字版本生成，保留文学语境并重新设计构图。
 
 ## 三个案例
 
@@ -28,9 +29,11 @@
 
 下载 Release 中的 `literary-visuals.zip`，解压后将 `literary-visuals` 文件夹放入支持本地 Skill 的 Agent 技能目录。Codex 默认目录为 `~/.codex/skills/`。
 
+新增的生成前选择流程请使用仓库中的 `skills/literary-visuals/` 文件夹；上方 v0.1.0 发行包仍为旧版。没有交互框工具的宿主会使用文字选项，也支持“由你决定，直接做”。
+
 > 使用 $literary-visuals，把这段文字转成适合收藏分享的动态作品：……
 
-[完整 Skill 规范](skills/literary-visuals/SKILL.md) · [制作与导出说明](skills/literary-visuals/references/production.md)
+[完整 Skill 规范](skills/literary-visuals/SKILL.md) · [生成前选择](skills/literary-visuals/references/intake.md) · [制作与导出说明](skills/literary-visuals/references/production.md)
 
 可直接下载并在浏览器打开 `skills/literary-visuals/assets/previews/` 下的三份 HTML；网页内置图片和视频导出。GitHub 文件页展示源代码，不会直接运行 HTML。
 

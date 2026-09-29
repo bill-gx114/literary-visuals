@@ -1,4 +1,4 @@
 interface:
   display_name: "文学意象转译"
-  short_description: "核对文字出处，将诗歌、小说和摘抄转化为有材质与情绪的抽象动态作品"
-  default_prompt: "使用 $literary-visuals 核对这段文字的出处，并把它转译为适合收藏和分享的抽象动态作品。"
+  short_description: "先选择风格、格式、平台画幅和文字版本，再核对出处并创作文学视觉作品"
+  default_prompt: "使用 $literary-visuals，先让我选择画面表达、交付形式、尺寸和是否带字，再核对出处并转译这段文字。"

@@ -5,19 +5,19 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; media-src blob:; connect-src 'none'; base-uri 'none'; form-action 'none'">
 <title>伪天</title>
 <style>
-:root{color-scheme:light dark;--bg:light-dark(#eeede7,#16171a);--ink:light-dark(#27282b,#e2e1dc);--dim:light-dark(#62636a,#aaabb0);--line:light-dark(#c8c9cd,#44464d)}*{box-sizing:border-box}body{margin:0;padding:32px 20px 48px;background:var(--bg);color:var(--ink);font:14px/1.6 -apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif}main{max-width:480px;margin:auto}header{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:16px}h1{font:400 23px/1.4 "Songti SC","STSong",serif;letter-spacing:.12em;margin:0}#kind{font-size:11px;color:var(--dim)}figure{margin:0}canvas{display:block;width:100%;aspect-ratio:4/5;background:#777}button,input{font:inherit}button{padding:9px 12px;min-height:40px;border:1px solid var(--line);border-radius:0;background:transparent;color:var(--ink);cursor:pointer}button:hover{background:light-dark(#dddde540,#ffffff08)}button:disabled{opacity:.5;cursor:wait}button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(--ink);outline-offset:4px}.row{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-top:14px}.parameter{display:flex;gap:9px;align-items:center;margin-left:auto;color:var(--dim);font-size:12px}.parameter input{width:100px;accent-color:var(--ink)}#export-row button{flex:1}#status{font-size:12px;color:var(--dim);min-height:1.6em;margin:10px 0}details{border-top:1px solid var(--line);padding-top:12px;margin-top:18px;color:var(--dim);font-size:12px}summary{cursor:pointer}#source-links{display:flex;gap:16px;flex-wrap:wrap}a{color:inherit}#source-note{white-space:pre-wrap}#error{padding:16px;border:1px solid var(--line)}[hidden]{display:none!important}@media(max-width:380px){header{display:block}#kind{display:block;margin-top:6px}body{padding:20px 12px}.parameter{margin-left:0;width:100%;justify-content:space-between}button{min-height:44px}#kind{max-width:125px}}
+:root{color-scheme:light dark;--bg:light-dark(#eeede7,#16171a);--ink:light-dark(#27282b,#e2e1dc);--dim:light-dark(#62636a,#aaabb0);--line:light-dark(#c8c9cd,#44464d)}*{box-sizing:border-box}body{margin:0;padding:32px 20px 48px;background:var(--bg);color:var(--ink);font:14px/1.6 -apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif}main{max-width:480px;margin:auto}header{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:16px}h1{font:400 23px/1.4 "Songti SC","STSong",serif;letter-spacing:.12em;margin:0}#kind{font-size:11px;color:var(--dim)}figure{margin:0}canvas{display:block;width:100%;background:#777}button,input{font:inherit}button{padding:9px 12px;min-height:40px;border:1px solid var(--line);border-radius:0;background:transparent;color:var(--ink);cursor:pointer}button:hover{background:light-dark(#dddde540,#ffffff08)}button:disabled{opacity:.5;cursor:wait}button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(--ink);outline-offset:4px}.row{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-top:14px}.parameter{display:flex;gap:9px;align-items:center;margin-left:auto;color:var(--dim);font-size:12px}.parameter input{width:100px;accent-color:var(--ink)}#export-row button{flex:1}#status{font-size:12px;color:var(--dim);min-height:1.6em;margin:10px 0}details{border-top:1px solid var(--line);padding-top:12px;margin-top:18px;color:var(--dim);font-size:12px}summary{cursor:pointer}#source-links{display:flex;gap:16px;flex-wrap:wrap}a{color:inherit}#source-note{white-space:pre-wrap}#error{padding:16px;border:1px solid var(--line)}[hidden]{display:none!important}@media(max-width:380px){header{display:block}#kind{display:block;margin-top:6px}body{padding:20px 12px}.parameter{margin-left:0;width:100%;justify-content:space-between}button{min-height:44px}#kind{max-width:125px}}
 </style>
 </head>
 <body><main>
 <header><h1 id="title"></h1><span id="kind">文学意象 · 动态作品</span></header>
 <figure><canvas id="art" role="img"></canvas><p id="error" role="alert" hidden></p></figure>
 <div class="row"><button id="pause" type="button" aria-pressed="false">暂停动效</button><button id="words" type="button" aria-pressed="false">隐去文字</button><label class="parameter"><span id="parameter-label"></span><input id="parameter" type="range" min="0" max="100" aria-label="画面参数"></label></div>
-<div id="export-row" class="row"><button id="png" type="button">保存高清图片</button><button id="video" type="button">导出 12 秒视频</button><button id="cancel" type="button" hidden>取消录制</button></div>
+<div id="export-row" class="row"><button id="png" type="button">保存高清图片</button><button id="png-alt" type="button" hidden>保存无字图片</button><button id="video" type="button">导出 12 秒视频</button><button id="video-alt" type="button" hidden>导出无字视频</button><button id="cancel" type="button" hidden>取消录制</button></div>
 <p id="status" aria-live="polite"></p>
 <details><summary>文字出处与创作说明</summary><p id="source-note"></p><div id="source-links"></div></details>
 </main>
 <script>
-const SPEC={"title": "伪天", "slug": "artificial-sky", "quote": "空气闻起来像塑料，\n地平线就像凝胶。", "intent": "苍白薄膜、煤黑软块的局部搏动、凝胶层片的挤压和记忆残影。标题由本次创作提出。", "source": {"status": "unverified", "label": "用户提供的摘抄 · 出处未确认", "context_note": "有限的中文精确短语及英文意象组合检索未获得可靠匹配；未署作者或书名。", "urls": []}, "caption": "像搏动着的黑暗之心", "typography": {"position": "top-left", "color": "#34343f", "caption_color": "#d0cfd9"}, "parameter": {"label": "扰动", "uniform": "force", "default": 0.45}, "uniforms": {}, "start_time": 3};
+const SPEC={"title": "伪天", "slug": "artificial-sky", "quote": "空气闻起来像塑料，\n地平线就像凝胶。", "intent": "苍白薄膜、煤黑软块的局部搏动、凝胶层片的挤压和记忆残影。标题由本次创作提出。", "source": {"status": "unverified", "label": "用户提供的摘抄 · 出处未确认", "context_note": "有限的中文精确短语及英文意象组合检索未获得可靠匹配；未署作者或书名。", "urls": []}, "caption": "像搏动着的黑暗之心", "typography": {"position": "top-left", "color": "#34343f", "caption_color": "#d0cfd9"}, "parameter": {"label": "扰动", "uniform": "force", "default": 0.45}, "uniforms": {}, "start_time": 3, "delivery": {"formats": ["png", "mp4", "html"], "ratio": "4:5", "text_mode": "with", "image_size": [1600, 2000], "video_size": [720, 900], "duration_seconds": 12, "fps": 24, "audio": "none"}};
 const FRAGMENT="precision highp float;\nuniform vec2 res;uniform float time;uniform float force;\nfloat hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}\nfloat noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(hash(i),hash(i+vec2(1,0)),f.x),mix(hash(i+vec2(0,1)),hash(i+1.),f.x),f.y);}\nfloat fbm(vec2 p){float s=0.,a=.5;for(int i=0;i\u003c5;i++){s+=a*noise(p);p=mat2(1.61,-1.19,1.19,1.61)*p+2.73;a*=.5;}return s;}\nfloat g(float x,float w){return exp(-x*x/w);}\nfloat form(vec2 p,float t,float strength){\nfloat beat=pow(.5+.5*sin(t*1.55),12.)+.32*pow(.5+.5*sin(t*1.55-.68),19.);\nvec2 center=vec2(.54,.437);\nvec2 q=(p-center)/vec2(.292,.161);\nq/=1.+(.015+.045*strength)*beat;\nfloat ang=atan(q.y,q.x);\nfloat irregular=.105*sin(ang*3.+.4)+.057*sin(ang*5.-.7)+.038*sin(ang*9.+t*.05);\nfloat n=fbm(p*26.+vec2(t*.012,-t*.005));\nreturn length(q)-1.-irregular-.073*(n-.5);\n}\nvoid main(){\nvec2 p=vec2(gl_FragCoord.x/res.x,1.-gl_FragCoord.y/res.y);float t=time;\nfloat grain=hash(gl_FragCoord.xy);\nfloat memory=pow(.5+.5*sin(t*.19+.6),9.)*force;\nfloat slice=g(p.y-.445,.000028)+.45*g(p.y-.505,.000009);\np.x+=slice*.017*memory;\nfloat fine=fbm(p*160.);\nfloat air=fbm(p*4.);\nvec3 col=mix(vec3(.73,.72,.76),vec3(.52,.57,.59),p.y*.6);\ncol+=vec3(.06,.032,.07)*(air-.5);\nfloat membrane=sin(p.x*8.+p.y*3.+air*.8);\ncol+=vec3(.038,.048,.060)*pow(max(0.,membrane),12.);\nfloat horizon=.667+.021*sin(p.x*6.+t*.09)+.014*(fbm(vec2(p.x*7.,t*.009))-.5);\nfloat hd=p.y-horizon;\nfloat under=smoothstep(-.017,.048,hd);\nvec3 lower=vec3(.11,.115,.16);\nlower+=vec3(.045,.04,.053)*fbm(p*12.);\ncol=mix(col,lower,under);\nfor(int i=0;i\u003c10;i++){\nfloat j=float(i);float yy=horizon+.024+j*.022;\nfloat arch=.105*g(p.x-(.50+.07*sin(j*.8)),.065+j*.004)*(1.-j*.053);\nyy-=arch;\nyy+=.006*sin(p.x*12.+j*1.7+t*.085)*(.3+force);\nfloat dy=p.y-yy;float band=g(dy,.00004+j*.000003);\nfloat highlight=g(dy+.003,.0000018);\nfloat shade=g(dy-.009,.000011);\ncol=mix(col,vec3(.24,.25,.30),band*.38);\ncol+=vec3(.16,.18,.21)*highlight*(.16+.22*noise(vec2(p.x*18.,j)));\ncol-=vec3(.043,.042,.05)*shade;\n}\nfloat gel=g(hd,.00010);col+=vec3(.14,.17,.17)*gel;\nfloat echo=form(p-vec2(.021*memory,.007),t-.9,force);\ncol=mix(col,vec3(.26,.29,.34),(1.-smoothstep(-.008,.025,echo))*.13);\nfloat d=form(p,t,force);\nfloat body=1.-smoothstep(-.004,.011,d);\nfloat darkHalo=g(max(d,0.),.011)*.19;\ncol*=1.-darkHalo;\nfloat edgeLight=g(d+.025,.0032);\nfloat inkTexture=fbm(vec2(p.x*70.,p.y*88.));\nvec3 coal=vec3(.022,.024,.030);\ncoal+=vec3(.061,.066,.082)*edgeLight*(.35+.65*g(p.x-.36,.02));\ncoal+=vec3(.028,.029,.033)*(inkTexture-.25);\nfloat sheen=g(p.y-(.375+.030*sin(p.x*13.)),.00024)*g(p.x-.37,.016);\ncoal+=vec3(.056,.061,.073)*sheen;\ncol=mix(col,coal,body);\nfor(int i=0;i\u003c5;i++){\nfloat j=float(i);float x=.10+j*.205;float y=.24+.047*sin(j*2.2);\nfloat length=.027+.025*hash(vec2(j,2.));\nfloat dy=p.y-y;float dx=p.x-x-dy*(.35+.4*sin(j));\nfloat slit=g(dx,.0000007)*smoothstep(-length,-length+.003,dy)*(1.-smoothstep(length-.003,length,dy));\ncol=mix(col,vec3(.15,.17,.21),slit*.53);\ncol+=vec3(.12,.13,.13)*g(dx-.002,.0000005)*smoothstep(-length,0.,dy)*(1.-smoothstep(0.,length,dy));\n}\ncol+=(fine-.5)*.03+(grain-.5)*.022;\nfloat offset=g(p.y-.445,.0000008)*memory;\ncol=mix(col,vec3(.55,.55,.61),offset*.18);\ngl_FragColor=vec4(clamp(col,0.,1.),1.);\n}\n";
 (()=>{
 'use strict';
@@ -26,7 +26,23 @@ const canvas=$('art'),ctx=canvas.getContext('2d',{alpha:false});
 const gpu=document.createElement('canvas');
 const gl=gpu.getContext('webgl',{alpha:false,antialias:false,preserveDrawingBuffer:true});
 const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
-const state={paused:reduced,words:true,value:SPEC.parameter.default,time:SPEC.start_time||0,busy:false};
+const delivery=SPEC.delivery,formats=delivery.formats,textMode=delivery.text_mode;
+const [imageW,imageH]=delivery.image_size,[videoW,videoH]=delivery.video_size;
+const ratio=imageW/imageH,staticOnly=formats.length===1&&formats[0]==='png';
+const state={paused:reduced||staticOnly,words:textMode!=='without',value:SPEC.parameter.default,time:SPEC.start_time||0,busy:false};
+let pairTime=null;
+const exportTime=()=>textMode==='both'?(pairTime??(pairTime=state.time)):state.time;
+canvas.style.aspectRatio=`${imageW} / ${imageH}`;
+document.querySelector('main').style.maxWidth=ratio>1?'840px':'480px';
+$('kind').textContent=staticOnly?'文学意象 · 静态作品':'文学意象 · 动态作品';
+$('pause').hidden=staticOnly;
+$('png').hidden=!formats.includes('png');
+$('png-alt').hidden=!formats.includes('png')||textMode!=='both';
+$('video').hidden=!formats.includes('mp4');
+$('video-alt').hidden=!formats.includes('mp4')||textMode!=='both';
+$('png').textContent=textMode==='both'?'保存带字图片':'保存高清图片';
+$('video').textContent=textMode==='both'?`导出带字视频 · ${delivery.duration_seconds} 秒`:`导出 ${delivery.duration_seconds} 秒视频`;
+$('video-alt').textContent=`导出无字视频 · ${delivery.duration_seconds} 秒`;
 let dirty=true,program,loc={},last=0,visible=true,cancelRequested=false;
 const status=text=>{$('status').textContent=text;};
 $('title').textContent=SPEC.title;document.title=SPEC.title;
@@ -40,10 +56,10 @@ function controls(){
  $('pause').textContent=state.paused?'继续流动':'暂停动效';$('pause').setAttribute('aria-pressed',String(state.paused));
  $('words').textContent=state.words?'隐去文字':'显示文字';$('words').setAttribute('aria-pressed',String(!state.words));
  $('parameter').value=Math.round(state.value*100);
- ['pause','words','parameter','png','video'].forEach(id=>$(id).disabled=state.busy);
+ ['pause','words','parameter','png','png-alt','video','video-alt'].forEach(id=>$(id).disabled=state.busy);
  $('cancel').hidden=!state.busy||!recording;dirty=true;
 }
-function fail(message){$('error').hidden=false;$('error').textContent=message;['pause','words','parameter','png','video'].forEach(id=>$(id).disabled=true);canvas.dataset.ready='false';}
+function fail(message){$('error').hidden=false;$('error').textContent=message;['pause','words','parameter','png','png-alt','video','video-alt'].forEach(id=>$(id).disabled=true);canvas.dataset.ready='false';}
 let recording=false;
 controls();
 if(!gl){fail('此浏览器无法使用 WebGL。源文件已保留，请换用支持 WebGL 的浏览器。');return;}
@@ -61,16 +77,18 @@ try{
 function wrap(text,maxWidth,context){
  const lines=[];String(text).split('\n').forEach(paragraph=>{let line='';for(const ch of Array.from(paragraph)){if(context.measureText(line+ch).width>maxWidth&&line){lines.push(line);line=ch;}else line+=ch;}lines.push(line);});return lines;
 }
-function lettering(context,w,h){
- if(!state.words)return;
+function lettering(context,w,h,showWords){
+ if(!showWords)return;
  const text=SPEC.typography,color=text.color||'#e0dacd';
  const x=w*.09,maxWidth=w*.82;
- let size=w*(text.size||.0375),lines,lineHeight;
+ const base=Math.min(w,h);
+ let size=base*(text.size||.0375),lines,lineHeight;
+ if(text.position==='top-right-vertical')size=Math.min(size,h*.68/(Math.max(...SPEC.quote.split('\n').map(line=>Array.from(line).length))*1.45));
  context.fillStyle=color;context.textBaseline='top';
  do{
   context.font=`400 ${size}px "Songti SC", "STSong", "Noto Serif CJK SC", serif`;
   lines=wrap(SPEC.quote,maxWidth,context);lineHeight=size*1.9;
-  if(text.position==='top-right-vertical'||lines.length*lineHeight<=h*.60||size<=w*.016)break;
+  if(text.position==='top-right-vertical'||lines.length*lineHeight<=h*.60||size<=base*.016)break;
   size*=.94;
  }while(true);
  let y=text.position==='bottom-left'?h*.79-lines.length*lineHeight:h*.09;
@@ -79,12 +97,12 @@ function lettering(context,w,h){
   const groups=SPEC.quote.split('\n');
   groups.forEach(line=>{let yy=h*.085;Array.from(line).forEach(ch=>{context.fillText(ch,column,yy);yy+=size*1.45;});column-=size*2.2;});
  }else lines.forEach(line=>{context.fillText(line,x,y);y+=lineHeight;});
- if(SPEC.caption){context.font=`400 ${w*.021}px "Songti SC", "STSong", serif`;context.fillStyle=text.caption_color||color;context.globalAlpha=.85;
-  const captionLines=wrap(SPEC.caption,maxWidth,context);let cy=h*.93-captionLines.length*w*.031;
-  captionLines.forEach(line=>{context.fillText(line,x,cy);cy+=w*.031;});context.globalAlpha=1;
+ if(SPEC.caption){context.font=`400 ${base*.021}px "Songti SC", "STSong", serif`;context.fillStyle=text.caption_color||color;context.globalAlpha=.85;
+  const captionLines=wrap(SPEC.caption,maxWidth,context);let cy=h*.93-captionLines.length*base*.031;
+  captionLines.forEach(line=>{context.fillText(line,x,cy);cy+=base*.031;});context.globalAlpha=1;
  }
 }
-function render(target,w,h,t){
+function render(target,w,h,t,showWords=state.words){
  if(gpu.width!==w||gpu.height!==h){gpu.width=w;gpu.height=h;}
  gl.viewport(0,0,w,h);gl.useProgram(program);
  gl.uniform2f(loc.res,w,h);gl.uniform1f(loc.time,t);
@@ -93,26 +111,28 @@ function render(target,w,h,t){
  gl.uniform1i(loc.mode,SPEC.uniforms.mode??0);
  gl.drawArrays(gl.TRIANGLES,0,6);
  if(target.width!==w||target.height!==h){target.width=w;target.height=h;}
- const context=target.getContext('2d');context.drawImage(gpu,0,0);lettering(context,w,h);
+ const context=target.getContext('2d');context.drawImage(gpu,0,0);lettering(context,w,h,showWords);
 }
-function preview(){const w=Math.max(1,Math.round(canvas.getBoundingClientRect().width*Math.min(devicePixelRatio||1,1.5)));render(canvas,w,Math.round(w*1.25),state.time);canvas.dataset.frame=state.time.toFixed(3);canvas.dataset.parameter=state.value.toFixed(2);canvas.dataset.words=String(state.words);dirty=false;}
-$('pause').onclick=()=>{state.paused=!state.paused;controls();};
+function preview(){const w=Math.max(1,Math.round(canvas.getBoundingClientRect().width*Math.min(devicePixelRatio||1,1.5)));render(canvas,w,Math.round(w/ratio),state.time);canvas.dataset.frame=state.time.toFixed(3);canvas.dataset.parameter=state.value.toFixed(2);canvas.dataset.words=String(state.words);dirty=false;}
+$('pause').onclick=()=>{state.paused=!state.paused;pairTime=null;controls();};
 $('words').onclick=()=>{state.words=!state.words;controls();};
-$('parameter').oninput=()=>{state.value=Number($('parameter').value)/100;dirty=true;};
+$('parameter').oninput=()=>{state.value=Number($('parameter').value)/100;pairTime=null;dirty=true;};
 new ResizeObserver(()=>dirty=true).observe(canvas);
 new IntersectionObserver(entries=>{visible=entries[0].isIntersecting;}).observe(canvas);
 function loop(now){requestAnimationFrame(loop);if(now-last<40)return;const dt=Math.min((now-last)/1000,.08);last=now;if(state.busy||!visible||document.hidden)return;if(!state.paused)state.time+=dt;if(!state.paused||dirty)preview();}
 requestAnimationFrame(loop);
-function download(blob,extension){const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=SPEC.slug+'.'+extension;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);}
+function download(blob,extension,showWords){const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=SPEC.slug+(showWords?'-with-text':'-art')+'.'+extension;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);}
 function blobFromCanvas(target){return new Promise((resolve,reject)=>target.toBlob(blob=>blob?resolve(blob):reject(new Error('无法生成图片')),'image/png'));}
-$('png').onclick=async()=>{
- state.busy=true;controls();status('正在生成 1600 × 2000 图片…');
- try{await document.fonts.ready;const out=document.createElement('canvas');render(out,1600,2000,state.time);download(await blobFromCanvas(out),'png');status('已生成 PNG · 1600 × 2000');}
+async function exportPng(showWords){
+ state.busy=true;controls();status(`正在生成 ${imageW} × ${imageH} 图片…`);
+ try{await document.fonts.ready;const out=document.createElement('canvas');render(out,imageW,imageH,exportTime(),showWords);download(await blobFromCanvas(out),'png',showWords);status(`已生成${showWords?'带字':'无字'} PNG · ${imageW} × ${imageH}`);}
  catch(error){status('图片导出失败：'+error.message);}
  finally{state.busy=false;controls();preview();}
-};
+}
+$('png').onclick=()=>exportPng(textMode==='both'?true:state.words);
+$('png-alt').onclick=()=>exportPng(false);
 $('cancel').onclick=()=>{cancelRequested=true;};
-$('video').onclick=async()=>{
+async function exportVideo(showWords){
  if(typeof MediaRecorder==='undefined'||!HTMLCanvasElement.prototype.captureStream){status('此浏览器不支持视频录制；可以保存 PNG 和 HTML。');return;}
  const choices=['video/mp4;codecs=avc1.42E01E','video/mp4','video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm'];
  const mime=choices.find(type=>MediaRecorder.isTypeSupported(type));
@@ -121,25 +141,27 @@ $('video').onclick=async()=>{
  let stream,recorder;
  try{
   await document.fonts.ready;
-  const out=document.createElement('canvas'),duration=12,baseTime=state.time;render(out,720,900,baseTime);
-  stream=out.captureStream(24);
+  const out=document.createElement('canvas'),duration=delivery.duration_seconds,baseTime=exportTime();render(out,videoW,videoH,baseTime,showWords);
+  stream=out.captureStream(delivery.fps);
   recorder=new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:5000000});
   const chunks=[];recorder.ondataavailable=e=>{if(e.data.size)chunks.push(e.data);};
   const finished=new Promise((resolve,reject)=>{recorder.onstop=resolve;recorder.onerror=e=>reject(new Error(e.error?.message||'编码失败'));});
   recorder.start(250);const started=performance.now();
-  await new Promise(resolve=>{
-   function tick(){const elapsed=(performance.now()-started)/1000;
+  await new Promise((resolve,reject)=>{
+   function tick(){try{const elapsed=(performance.now()-started)/1000;
     if(elapsed>=duration||cancelRequested||document.hidden){if(document.hidden)cancelRequested=true;resolve();return;}
-    render(out,720,900,baseTime+elapsed);ctx.drawImage(out,0,0,canvas.width,canvas.height);
-    status(`正在录制 ${Math.floor(elapsed)} / 12 秒，请保持页面可见…`);setTimeout(tick,1000/24);
-   }tick();
+    render(out,videoW,videoH,baseTime+elapsed,showWords);ctx.drawImage(out,0,0,canvas.width,canvas.height);
+    status(`正在录制 ${Math.floor(elapsed)} / ${duration} 秒，请保持页面可见…`);setTimeout(tick,1000/delivery.fps);
+   }catch(error){reject(error);}}tick();
   });
   recorder.stop();await finished;
   if(cancelRequested){status('已取消录制，未生成视频。');}
-  else{const actual=recorder.mimeType||mime,extension=actual.includes('mp4')?'mp4':'webm';const blob=new Blob(chunks,{type:actual});if(blob.size<1000)throw new Error('视频数据为空');download(blob,extension);status(`已生成 ${extension.toUpperCase()} · 720 × 900 · 约 12 秒${extension==='webm'?'；可用随包工具转成 MP4':''}`);}
+  else{const actual=recorder.mimeType||mime,extension=actual.includes('mp4')?'mp4':'webm';const blob=new Blob(chunks,{type:actual});if(blob.size<1000)throw new Error('视频数据为空');download(blob,extension,showWords);status(`已生成${showWords?'带字':'无字'} ${extension.toUpperCase()} · ${videoW} × ${videoH} · 约 ${duration} 秒${extension==='webm'?'；可用随包工具转成 MP4':''}`);}
  }catch(error){status('视频导出失败：'+error.message);}
  finally{if(recorder&&recorder.state!=='inactive')recorder.stop();stream?.getTracks().forEach(track=>track.stop());recording=false;state.busy=false;controls();preview();}
-};
+}
+$('video').onclick=()=>exportVideo(textMode==='both'?true:state.words);
+$('video-alt').onclick=()=>exportVideo(false);
 })();
 
 </script>

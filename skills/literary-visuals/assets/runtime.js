@@ -5,7 +5,23 @@ const canvas=$('art'),ctx=canvas.getContext('2d',{alpha:false});
 const gpu=document.createElement('canvas');
 const gl=gpu.getContext('webgl',{alpha:false,antialias:false,preserveDrawingBuffer:true});
 const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
-const state={paused:reduced,words:true,value:SPEC.parameter.default,time:SPEC.start_time||0,busy:false};
+const delivery=SPEC.delivery,formats=delivery.formats,textMode=delivery.text_mode;
+const [imageW,imageH]=delivery.image_size,[videoW,videoH]=delivery.video_size;
+const ratio=imageW/imageH,staticOnly=formats.length===1&&formats[0]==='png';
+const state={paused:reduced||staticOnly,words:textMode!=='without',value:SPEC.parameter.default,time:SPEC.start_time||0,busy:false};
+let pairTime=null;
+const exportTime=()=>textMode==='both'?(pairTime??(pairTime=state.time)):state.time;
+canvas.style.aspectRatio=`${imageW} / ${imageH}`;
+document.querySelector('main').style.maxWidth=ratio>1?'840px':'480px';
+$('kind').textContent=staticOnly?'文学意象 · 静态作品':'文学意象 · 动态作品';
+$('pause').hidden=staticOnly;
+$('png').hidden=!formats.includes('png');
+$('png-alt').hidden=!formats.includes('png')||textMode!=='both';
+$('video').hidden=!formats.includes('mp4');
+$('video-alt').hidden=!formats.includes('mp4')||textMode!=='both';
+$('png').textContent=textMode==='both'?'保存带字图片':'保存高清图片';
+$('video').textContent=textMode==='both'?`导出带字视频 · ${delivery.duration_seconds} 秒`:`导出 ${delivery.duration_seconds} 秒视频`;
+$('video-alt').textContent=`导出无字视频 · ${delivery.duration_seconds} 秒`;
 let dirty=true,program,loc={},last=0,visible=true,cancelRequested=false;
 const status=text=>{$('status').textContent=text;};
 $('title').textContent=SPEC.title;document.title=SPEC.title;
@@ -19,10 +35,10 @@ function controls(){
  $('pause').textContent=state.paused?'继续流动':'暂停动效';$('pause').setAttribute('aria-pressed',String(state.paused));
  $('words').textContent=state.words?'隐去文字':'显示文字';$('words').setAttribute('aria-pressed',String(!state.words));
  $('parameter').value=Math.round(state.value*100);
- ['pause','words','parameter','png','video'].forEach(id=>$(id).disabled=state.busy);
+ ['pause','words','parameter','png','png-alt','video','video-alt'].forEach(id=>$(id).disabled=state.busy);
  $('cancel').hidden=!state.busy||!recording;dirty=true;
 }
-function fail(message){$('error').hidden=false;$('error').textContent=message;['pause','words','parameter','png','video'].forEach(id=>$(id).disabled=true);canvas.dataset.ready='false';}
+function fail(message){$('error').hidden=false;$('error').textContent=message;['pause','words','parameter','png','png-alt','video','video-alt'].forEach(id=>$(id).disabled=true);canvas.dataset.ready='false';}
 let recording=false;
 controls();
 if(!gl){fail('此浏览器无法使用 WebGL。源文件已保留，请换用支持 WebGL 的浏览器。');return;}
@@ -40,16 +56,18 @@ try{
 function wrap(text,maxWidth,context){
  const lines=[];String(text).split('\n').forEach(paragraph=>{let line='';for(const ch of Array.from(paragraph)){if(context.measureText(line+ch).width>maxWidth&&line){lines.push(line);line=ch;}else line+=ch;}lines.push(line);});return lines;
 }
-function lettering(context,w,h){
- if(!state.words)return;
+function lettering(context,w,h,showWords){
+ if(!showWords)return;
  const text=SPEC.typography,color=text.color||'#e0dacd';
  const x=w*.09,maxWidth=w*.82;
- let size=w*(text.size||.0375),lines,lineHeight;
+ const base=Math.min(w,h);
+ let size=base*(text.size||.0375),lines,lineHeight;
+ if(text.position==='top-right-vertical')size=Math.min(size,h*.68/(Math.max(...SPEC.quote.split('\n').map(line=>Array.from(line).length))*1.45));
  context.fillStyle=color;context.textBaseline='top';
  do{
   context.font=`400 ${size}px "Songti SC", "STSong", "Noto Serif CJK SC", serif`;
   lines=wrap(SPEC.quote,maxWidth,context);lineHeight=size*1.9;
-  if(text.position==='top-right-vertical'||lines.length*lineHeight<=h*.60||size<=w*.016)break;
+  if(text.position==='top-right-vertical'||lines.length*lineHeight<=h*.60||size<=base*.016)break;
   size*=.94;
  }while(true);
  let y=text.position==='bottom-left'?h*.79-lines.length*lineHeight:h*.09;
@@ -58,12 +76,12 @@ function lettering(context,w,h){
   const groups=SPEC.quote.split('\n');
   groups.forEach(line=>{let yy=h*.085;Array.from(line).forEach(ch=>{context.fillText(ch,column,yy);yy+=size*1.45;});column-=size*2.2;});
  }else lines.forEach(line=>{context.fillText(line,x,y);y+=lineHeight;});
- if(SPEC.caption){context.font=`400 ${w*.021}px "Songti SC", "STSong", serif`;context.fillStyle=text.caption_color||color;context.globalAlpha=.85;
-  const captionLines=wrap(SPEC.caption,maxWidth,context);let cy=h*.93-captionLines.length*w*.031;
-  captionLines.forEach(line=>{context.fillText(line,x,cy);cy+=w*.031;});context.globalAlpha=1;
+ if(SPEC.caption){context.font=`400 ${base*.021}px "Songti SC", "STSong", serif`;context.fillStyle=text.caption_color||color;context.globalAlpha=.85;
+  const captionLines=wrap(SPEC.caption,maxWidth,context);let cy=h*.93-captionLines.length*base*.031;
+  captionLines.forEach(line=>{context.fillText(line,x,cy);cy+=base*.031;});context.globalAlpha=1;
  }
 }
-function render(target,w,h,t){
+function render(target,w,h,t,showWords=state.words){
  if(gpu.width!==w||gpu.height!==h){gpu.width=w;gpu.height=h;}
  gl.viewport(0,0,w,h);gl.useProgram(program);
  gl.uniform2f(loc.res,w,h);gl.uniform1f(loc.time,t);
@@ -72,26 +90,28 @@ function render(target,w,h,t){
  gl.uniform1i(loc.mode,SPEC.uniforms.mode??0);
  gl.drawArrays(gl.TRIANGLES,0,6);
  if(target.width!==w||target.height!==h){target.width=w;target.height=h;}
- const context=target.getContext('2d');context.drawImage(gpu,0,0);lettering(context,w,h);
+ const context=target.getContext('2d');context.drawImage(gpu,0,0);lettering(context,w,h,showWords);
 }
-function preview(){const w=Math.max(1,Math.round(canvas.getBoundingClientRect().width*Math.min(devicePixelRatio||1,1.5)));render(canvas,w,Math.round(w*1.25),state.time);canvas.dataset.frame=state.time.toFixed(3);canvas.dataset.parameter=state.value.toFixed(2);canvas.dataset.words=String(state.words);dirty=false;}
-$('pause').onclick=()=>{state.paused=!state.paused;controls();};
+function preview(){const w=Math.max(1,Math.round(canvas.getBoundingClientRect().width*Math.min(devicePixelRatio||1,1.5)));render(canvas,w,Math.round(w/ratio),state.time);canvas.dataset.frame=state.time.toFixed(3);canvas.dataset.parameter=state.value.toFixed(2);canvas.dataset.words=String(state.words);dirty=false;}
+$('pause').onclick=()=>{state.paused=!state.paused;pairTime=null;controls();};
 $('words').onclick=()=>{state.words=!state.words;controls();};
-$('parameter').oninput=()=>{state.value=Number($('parameter').value)/100;dirty=true;};
+$('parameter').oninput=()=>{state.value=Number($('parameter').value)/100;pairTime=null;dirty=true;};
 new ResizeObserver(()=>dirty=true).observe(canvas);
 new IntersectionObserver(entries=>{visible=entries[0].isIntersecting;}).observe(canvas);
 function loop(now){requestAnimationFrame(loop);if(now-last<40)return;const dt=Math.min((now-last)/1000,.08);last=now;if(state.busy||!visible||document.hidden)return;if(!state.paused)state.time+=dt;if(!state.paused||dirty)preview();}
 requestAnimationFrame(loop);
-function download(blob,extension){const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=SPEC.slug+'.'+extension;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);}
+function download(blob,extension,showWords){const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=SPEC.slug+(showWords?'-with-text':'-art')+'.'+extension;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);}
 function blobFromCanvas(target){return new Promise((resolve,reject)=>target.toBlob(blob=>blob?resolve(blob):reject(new Error('无法生成图片')),'image/png'));}
-$('png').onclick=async()=>{
- state.busy=true;controls();status('正在生成 1600 × 2000 图片…');
- try{await document.fonts.ready;const out=document.createElement('canvas');render(out,1600,2000,state.time);download(await blobFromCanvas(out),'png');status('已生成 PNG · 1600 × 2000');}
+async function exportPng(showWords){
+ state.busy=true;controls();status(`正在生成 ${imageW} × ${imageH} 图片…`);
+ try{await document.fonts.ready;const out=document.createElement('canvas');render(out,imageW,imageH,exportTime(),showWords);download(await blobFromCanvas(out),'png',showWords);status(`已生成${showWords?'带字':'无字'} PNG · ${imageW} × ${imageH}`);}
  catch(error){status('图片导出失败：'+error.message);}
  finally{state.busy=false;controls();preview();}
-};
+}
+$('png').onclick=()=>exportPng(textMode==='both'?true:state.words);
+$('png-alt').onclick=()=>exportPng(false);
 $('cancel').onclick=()=>{cancelRequested=true;};
-$('video').onclick=async()=>{
+async function exportVideo(showWords){
  if(typeof MediaRecorder==='undefined'||!HTMLCanvasElement.prototype.captureStream){status('此浏览器不支持视频录制；可以保存 PNG 和 HTML。');return;}
  const choices=['video/mp4;codecs=avc1.42E01E','video/mp4','video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm'];
  const mime=choices.find(type=>MediaRecorder.isTypeSupported(type));
@@ -100,23 +120,25 @@ $('video').onclick=async()=>{
  let stream,recorder;
  try{
   await document.fonts.ready;
-  const out=document.createElement('canvas'),duration=12,baseTime=state.time;render(out,720,900,baseTime);
-  stream=out.captureStream(24);
+  const out=document.createElement('canvas'),duration=delivery.duration_seconds,baseTime=exportTime();render(out,videoW,videoH,baseTime,showWords);
+  stream=out.captureStream(delivery.fps);
   recorder=new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:5000000});
   const chunks=[];recorder.ondataavailable=e=>{if(e.data.size)chunks.push(e.data);};
   const finished=new Promise((resolve,reject)=>{recorder.onstop=resolve;recorder.onerror=e=>reject(new Error(e.error?.message||'编码失败'));});
   recorder.start(250);const started=performance.now();
-  await new Promise(resolve=>{
-   function tick(){const elapsed=(performance.now()-started)/1000;
+  await new Promise((resolve,reject)=>{
+   function tick(){try{const elapsed=(performance.now()-started)/1000;
     if(elapsed>=duration||cancelRequested||document.hidden){if(document.hidden)cancelRequested=true;resolve();return;}
-    render(out,720,900,baseTime+elapsed);ctx.drawImage(out,0,0,canvas.width,canvas.height);
-    status(`正在录制 ${Math.floor(elapsed)} / 12 秒，请保持页面可见…`);setTimeout(tick,1000/24);
-   }tick();
+    render(out,videoW,videoH,baseTime+elapsed,showWords);ctx.drawImage(out,0,0,canvas.width,canvas.height);
+    status(`正在录制 ${Math.floor(elapsed)} / ${duration} 秒，请保持页面可见…`);setTimeout(tick,1000/delivery.fps);
+   }catch(error){reject(error);}}tick();
   });
   recorder.stop();await finished;
   if(cancelRequested){status('已取消录制，未生成视频。');}
-  else{const actual=recorder.mimeType||mime,extension=actual.includes('mp4')?'mp4':'webm';const blob=new Blob(chunks,{type:actual});if(blob.size<1000)throw new Error('视频数据为空');download(blob,extension);status(`已生成 ${extension.toUpperCase()} · 720 × 900 · 约 12 秒${extension==='webm'?'；可用随包工具转成 MP4':''}`);}
+  else{const actual=recorder.mimeType||mime,extension=actual.includes('mp4')?'mp4':'webm';const blob=new Blob(chunks,{type:actual});if(blob.size<1000)throw new Error('视频数据为空');download(blob,extension,showWords);status(`已生成${showWords?'带字':'无字'} ${extension.toUpperCase()} · ${videoW} × ${videoH} · 约 ${duration} 秒${extension==='webm'?'；可用随包工具转成 MP4':''}`);}
  }catch(error){status('视频导出失败：'+error.message);}
  finally{if(recorder&&recorder.state!=='inactive')recorder.stop();stream?.getTracks().forEach(track=>track.stop());recording=false;state.busy=false;controls();preview();}
-};
+}
+$('video').onclick=()=>exportVideo(textMode==='both'?true:state.words);
+$('video-alt').onclick=()=>exportVideo(false);
 })();

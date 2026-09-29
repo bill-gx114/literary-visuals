@@ -10,6 +10,56 @@ from urllib.parse import urlparse
 
 ROOT = Path(__file__).resolve().parents[1]
 STATUSES = {'confirmed', 'work-confirmed-translation-unverified', 'ambiguous', 'unverified', 'original'}
+SIZES = {
+    '3:4': ([1536, 2048], [1080, 1440]),
+    '4:5': ([1600, 2000], [1080, 1350]),
+    '9:16': ([1440, 2560], [1080, 1920]),
+    '16:9': ([2560, 1440], [1920, 1080]),
+    '1:1': ([2000, 2000], [1080, 1080]),
+}
+
+
+def normalize_delivery(spec):
+    legacy = 'delivery' not in spec
+    delivery = spec.setdefault('delivery', {})
+    if not isinstance(delivery, dict):
+        raise ValueError('delivery must be an object')
+    formats = delivery.setdefault('formats', ['png', 'mp4', 'html'])
+    if not isinstance(formats, list) or not formats or any(f not in ('png', 'mp4', 'html') for f in formats):
+        raise ValueError('delivery.formats must be a nonempty list of png, mp4, html')
+    if len(set(formats)) != len(formats):
+        raise ValueError('delivery.formats must not contain duplicates')
+    ratio = delivery.setdefault('ratio', '4:5')
+    if ratio not in SIZES and ratio != 'custom':
+        raise ValueError('delivery.ratio must be a supported ratio or custom')
+    if delivery.setdefault('text_mode', 'with') not in ('with', 'without', 'both'):
+        raise ValueError('delivery.text_mode must be with, without or both')
+    if ratio in SIZES:
+        png, video = SIZES[ratio]
+        delivery.setdefault('image_size', list(png))
+        delivery.setdefault('video_size', [720, 900] if legacy else list(video))
+    for key, limit in (('image_size', 4096), ('video_size', 3840)):
+        size = delivery.get(key)
+        if not isinstance(size, list) or len(size) != 2 or any(type(n) is not int or not 128 <= n <= limit for n in size):
+            raise ValueError(f'delivery.{key} must contain two integer dimensions between 128 and {limit}')
+        if key == 'video_size' and any(n % 2 for n in size):
+            raise ValueError('video dimensions must be even')
+    iw, ih = delivery['image_size']
+    vw, vh = delivery['video_size']
+    if iw * vh != ih * vw:
+        raise ValueError('image and video must have the same aspect ratio')
+    if ratio in SIZES:
+        rw, rh = map(int, ratio.split(':'))
+        if iw * rh != ih * rw:
+            raise ValueError('pixel dimensions do not match delivery.ratio')
+    duration = delivery.setdefault('duration_seconds', 12)
+    if type(duration) is not int or not 3 <= duration <= 60:
+        raise ValueError('duration_seconds must be an integer from 3 to 60')
+    if delivery.setdefault('fps', 24) not in (24, 30):
+        raise ValueError('delivery.fps must be 24 or 30')
+    if delivery.setdefault('audio', 'none') != 'none':
+        raise ValueError('this HTML renderer supports silent video only; use another renderer for audio')
+    return delivery
 
 
 def validate(spec):
@@ -73,6 +123,7 @@ def validate(spec):
     if typography['position'] == 'top-right-vertical':
         if len(spec['quote'].splitlines()) > 5 or any(len(line) > 17 for line in spec['quote'].splitlines()):
             raise ValueError('vertical text exceeds artwork space; shorten it or choose horizontal text')
+    normalize_delivery(spec)
     return spec
 
 
