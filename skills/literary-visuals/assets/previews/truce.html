@@ -13,12 +13,90 @@
 <figure><canvas id="art" role="img"></canvas><p id="error" role="alert" hidden></p></figure>
 <div class="row"><button id="pause" type="button" aria-pressed="false">暂停动效</button><button id="words" type="button" aria-pressed="false">隐去文字</button><label class="parameter"><span id="parameter-label"></span><input id="parameter" type="range" min="0" max="100" aria-label="画面参数"></label></div>
 <div id="export-row" class="row"><button id="png" type="button">保存高清图片</button><button id="png-alt" type="button" hidden>保存无字图片</button><button id="video" type="button">导出 12 秒视频</button><button id="video-alt" type="button" hidden>导出无字视频</button><button id="cancel" type="button" hidden>取消录制</button></div>
+<p id="layout-warning" role="alert" hidden></p>
 <p id="status" aria-live="polite"></p>
 <details><summary>文字出处与创作说明</summary><p id="source-note"></p><div id="source-links"></div></details>
 </main>
 <script>
 const SPEC={"title": "暂歇", "slug": "truce", "quote": "傍晚应该是\n一段忧伤的喘息。", "intent": "压力暂时松开，余热仍在。滑动对照眼前的灼热与想象的傍晚。", "source": {"status": "work-confirmed-translation-unverified", "label": "加缪《局外人》第一部第一章", "context_note": "叙述发生于母亲葬礼段落的白昼，傍晚是由母亲生前散步引出的想象。用户提供的中文译者及版本未可靠确认。", "urls": ["https://www.fadedpage.com/books/20150715/html.php"]}, "caption": "加缪《局外人》 · 第一部第一章", "typography": {"position": "top-left", "color": "#303c3c", "caption_color": "#e0d4c2"}, "parameter": {"label": "想象的傍晚", "uniform": "evening", "default": 1}, "uniforms": {}, "start_time": 11, "delivery": {"formats": ["png", "mp4", "html"], "ratio": "4:5", "text_mode": "with", "image_size": [1600, 2000], "video_size": [720, 900], "duration_seconds": 12, "fps": 24, "audio": "none"}};
 const FRAGMENT="precision highp float;\nuniform vec2 res;uniform float time;uniform float evening;\nfloat hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}\nfloat noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(hash(i),hash(i+vec2(1,0)),f.x),mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),f.x),f.y);}\nfloat fbm(vec2 p){float s=0.,a=.5;for(int i=0;i\u003c5;i++){s+=a*noise(p);p=mat2(1.61,-1.19,1.19,1.61)*p+2.73;a*=.5;}return s;}\nfloat gaussian(float d,float width){return exp(-d*d/width);}\nvoid main(){\nvec2 p=vec2(gl_FragCoord.x/res.x,1.-gl_FragCoord.y/res.y);\nfloat e=evening,t=time;\nfloat grain=hash(gl_FragCoord.xy);\nfloat pigment=fbm(p*145.);\nfloat wide=fbm(p*6.);\nfloat breath=pow(.5+.5*sin(t*.125),3.);\nfloat release=e*(.009+.008*breath);\nfloat shimmer=(1.-e)*.0025*sin(p.y*98.+t*.52)*sin(p.x*35.+t*.26);\np.x+=shimmer;\nvec3 skyDay=vec3(.85,.76,.57),skyEvening=vec3(.60,.62,.65);\nvec3 col=mix(skyDay,skyEvening,e);\nfloat skyDust=fbm(vec2(p.x*2.2,p.y*5.));\ncol+=vec3(.12,.075,.047)*gaussian(p.y-.41,.05);\ncol+=(skyDust-.5)*.14;\ncol=mix(col,mix(vec3(.95,.83,.61),vec3(.79,.70,.63),e),gaussian(p.y-.49,.028)*.55);\nfloat h=.505+.013*sin(p.x*5.8)+.008*(fbm(vec2(p.x*8.,1.))-.5);\nfloat distant=smoothstep(h-.002,h+.014,p.y)*(1.-smoothstep(h+.065,h+.090,p.y));\ncol=mix(col,mix(vec3(.48,.43,.29),vec3(.39,.43,.42),e),distant*.8);\nfloat slit=h+.074+release+.002*sin(p.x*4.+t*.05);\nfloat gap=gaussian(p.y-slit,.000013+release*.00030)*(.32+.48*gaussian(p.x-.57,.17));\ncol=mix(col,mix(vec3(.96,.86,.67),vec3(.84,.77,.69),e),gap*.8);\nfloat landTop=slit+.012+.022*fbm(vec2(p.x*9.,.7));\nfloat land=smoothstep(landTop-.009,landTop+.015,p.y);\nfloat cut=fbm(vec2(p.x*5.,p.y*6.));\nfloat plane=p.x*.73-p.y*.46+.27*(cut-.5);\nvec3 rust=mix(vec3(.56,.24,.125),vec3(.40,.23,.21),e);\nvec3 green=mix(vec3(.36,.39,.22),vec3(.255,.325,.285),e);\nvec3 soil=mix(rust,green,smoothstep(-.10,.01,plane));\nsoil=mix(soil,rust*.88,smoothstep(.37,.40,plane));\nsoil+=vec3(.15,.10,.064)*(wide-.5);\nfloat scrape=fbm(vec2(p.x*18.,p.y*160.));\nsoil+=(scrape-.5)*.095+(pigment-.5)*.12;\nfloat sediment=gaussian(p.y-(.74+.040*sin(p.x*4.)+.008*cut),.00001);\nsoil=mix(soil,vec3(.64,.48,.33),sediment*.15);\ncol=mix(col,soil,land);\nfor(int i=0;i\u003c11;i++){\nfloat j=float(i)/10.;\nfloat x=.17+j*.52;\nfloat foot=.68-j*.10;\nfloat height=.063*(1.-j*.55);\nfloat width=.0055*(1.-j*.60);\nfloat dx=p.x-x-(p.y-foot)*.13;\nfloat ragged=.70+.30*noise(vec2(p.x*340.,p.y*120.));\nfloat stroke=gaussian(dx,width*width)*smoothstep(foot-height-.003,foot-height+.009,p.y)*(1.-smoothstep(foot-.008,foot+.008,p.y));\ncol=mix(col,vec3(.16,.205,.195),stroke*ragged*.73);\n}\nfloat smallVoid=gaussian(p.x-.74,.0007)*gaussian(p.y-.635,.000014);\ncol=mix(col,vec3(.71,.68,.54),smallVoid*.25);\ncol+=(pigment-.5)*.038+(grain-.5)*.025;\nfloat bottom=smoothstep(.83,1.,p.y);\ncol*=1.-bottom*.22;\ngl_FragColor=vec4(clamp(col,0.,1.),1.);\n}\n";
+/* Shared by browser preview, export and Node layout tests. No automatic shrinking. */
+const LiteraryLettering = (() => {
+  'use strict';
+  const font = size => `400 ${size}px "Songti SC", "STSong", "Noto Serif CJK SC", serif`;
+  const closing = /^[，。！？；：、…）】》」』,.!?;:%]/u;
+  const opening = /[（【《「『(]$/u;
+  function wrap(text, maxWidth, context) {
+    const lines = [];
+    for (const paragraph of text.split('\n')) {
+      let line = '';
+      const tokens = paragraph.match(/[\p{Script=Latin}\d]+(?:['’-][\p{Script=Latin}\d]+)*|[^\S\n]+|[^\s]/gu) || [];
+      function add(token) {
+        if (!line || context.measureText(line + token).width <= maxWidth) { line += token; return; }
+        if (!token.trim()) { lines.push(line.trimEnd()); line = ''; return; }
+        let carry = '';
+        if (closing.test(token) || opening.test(line)) {
+          const chars = Array.from(line.trimEnd());
+          carry = chars.pop() || '';
+          line = chars.join('');
+        }
+        if (line) lines.push(line.trimEnd());
+        line = carry + token;
+      }
+      for (const token of tokens) {
+        if (context.measureText(token).width > maxWidth) Array.from(token).forEach(add);
+        else add(token);
+      }
+      lines.push(line.trimEnd());
+    }
+    return lines;
+  }
+  const rect = (box, w, h) => ({x:box[0]*w,y:box[1]*h,w:box[2]*w,h:box[3]*h});
+  function layout(spec, w, h, context) {
+    const text = spec.typography, base = Math.min(w,h);
+    const size = base * (text.size || .0375), lineHeight = size * (text.line_height || 1.9);
+    const vertical = text.position === 'top-right-vertical';
+    const box = rect(text.box || (vertical ? [.09,.085,.82,.68] : [.09,.09,.82,.70]),w,h);
+    const commands = [], issues = [];
+    const captionBox = rect(text.caption_box || [.09,.83,.82,.10],w,h);
+    const captionSize = base * .026;
+    if (spec.caption) {
+      context.font = font(captionSize);
+      const lines = wrap(spec.caption, captionBox.w, context), step = captionSize*1.5;
+      const height = lines.length*step;
+      if (height>captionBox.h || lines.some(s=>context.measureText(s).width>captionBox.w+.01)) issues.push('署名超出预留区域');
+      lines.forEach((value,i)=>commands.push({text:value,x:captionBox.x,y:captionBox.y+captionBox.h-height+i*step,size:captionSize,color:text.caption_color||text.color||'#e0dacd',caption:true}));
+    }
+    context.font = font(size);
+    if (vertical) {
+      const groups=spec.quote.split('\n'), columnStep=size*2.2;
+      const width=(groups.length-1)*columnStep+size;
+      if(width>box.w || groups.some(s=>Array.from(s).length*size*1.45>box.h)) issues.push('竖排原文超出预留区域');
+      groups.forEach((line,i)=>Array.from(line).forEach((value,j)=>commands.push({text:value,x:box.x+box.w-size-i*columnStep,y:box.y+j*size*1.45,size,color:text.color||'#e0dacd'})));
+    } else {
+      const lines=wrap(spec.quote,box.w,context),height=lines.length*lineHeight;
+      if(height>box.h || lines.some(s=>context.measureText(s).width>box.w+.01)) issues.push('原文超出预留阅读区域');
+      const y=text.position==='bottom-left'?box.y+box.h-height:box.y;
+      lines.forEach((value,i)=>commands.push({text:value,x:box.x,y:y+i*lineHeight,size,color:text.color||'#e0dacd'}));
+    }
+    // Actual line boxes, not just font height: typography must not collide with its caption.
+    const quoteCommands=commands.filter(c=>!c.caption&&c.text);
+    for(const c of commands.filter(c=>c.caption&&c.text)) {
+      context.font=font(c.size);const cw=context.measureText(c.text).width;
+      if(quoteCommands.some(q=>{context.font=font(q.size);const qw=context.measureText(q.text).width;return q.x<c.x+cw&&q.x+qw>c.x&&q.y<c.y+c.size*1.5&&q.y+(vertical?q.size*1.45:lineHeight)>c.y;})) {issues.push('原文与署名重叠');break;}
+    }
+    return {ok:issues.length===0,issues,commands,size};
+  }
+  function draw(context, result) {
+    if(!result.ok) return; // Never draw clipped text or silently substitute a smaller size.
+    context.save();context.textBaseline='top';context.textAlign='left';
+    for(const command of result.commands){context.font=font(command.size);context.fillStyle=command.color;context.globalAlpha=command.caption?.85:1;context.fillText(command.text,command.x,command.y);}
+    context.restore();
+  }
+  return {wrap,layout,draw};
+})();
+if(typeof module!=='undefined'&&module.exports)module.exports=LiteraryLettering;
+
 (()=>{
 'use strict';
 const $=id=>document.getElementById(id);
@@ -74,33 +152,10 @@ try{
  ['res','time','force','evening','mode'].forEach(name=>loc[name]=gl.getUniformLocation(program,name));
  canvas.dataset.ready='true';
 }catch(error){console.error(error);fail('画面编译失败，无法导出。请让创作工具检查着色器。');return;}
-function wrap(text,maxWidth,context){
- const lines=[];String(text).split('\n').forEach(paragraph=>{let line='';for(const ch of Array.from(paragraph)){if(context.measureText(line+ch).width>maxWidth&&line){lines.push(line);line=ch;}else line+=ch;}lines.push(line);});return lines;
-}
 function lettering(context,w,h,showWords){
- if(!showWords)return;
- const text=SPEC.typography,color=text.color||'#e0dacd';
- const x=w*.09,maxWidth=w*.82;
- const base=Math.min(w,h);
- let size=base*(text.size||.0375),lines,lineHeight;
- if(text.position==='top-right-vertical')size=Math.min(size,h*.68/(Math.max(...SPEC.quote.split('\n').map(line=>Array.from(line).length))*1.45));
- context.fillStyle=color;context.textBaseline='top';
- do{
-  context.font=`400 ${size}px "Songti SC", "STSong", "Noto Serif CJK SC", serif`;
-  lines=wrap(SPEC.quote,maxWidth,context);lineHeight=size*1.9;
-  if(text.position==='top-right-vertical'||lines.length*lineHeight<=h*.60||size<=base*.016)break;
-  size*=.94;
- }while(true);
- let y=text.position==='bottom-left'?h*.79-lines.length*lineHeight:h*.09;
- if(text.position==='top-right-vertical'){
-  let column=w*.89-size;
-  const groups=SPEC.quote.split('\n');
-  groups.forEach(line=>{let yy=h*.085;Array.from(line).forEach(ch=>{context.fillText(ch,column,yy);yy+=size*1.45;});column-=size*2.2;});
- }else lines.forEach(line=>{context.fillText(line,x,y);y+=lineHeight;});
- if(SPEC.caption){context.font=`400 ${base*.021}px "Songti SC", "STSong", serif`;context.fillStyle=text.caption_color||color;context.globalAlpha=.85;
-  const captionLines=wrap(SPEC.caption,maxWidth,context);let cy=h*.93-captionLines.length*base*.031;
-  captionLines.forEach(line=>{context.fillText(line,x,cy);cy+=base*.031;});context.globalAlpha=1;
- }
+ if(!showWords)return {ok:true,issues:[]};
+ const result=LiteraryLettering.layout(SPEC,w,h,context);
+ LiteraryLettering.draw(context,result);return result;
 }
 function render(target,w,h,t,showWords=state.words){
  if(gpu.width!==w||gpu.height!==h){gpu.width=w;gpu.height=h;}
@@ -111,9 +166,9 @@ function render(target,w,h,t,showWords=state.words){
  gl.uniform1i(loc.mode,SPEC.uniforms.mode??0);
  gl.drawArrays(gl.TRIANGLES,0,6);
  if(target.width!==w||target.height!==h){target.width=w;target.height=h;}
- const context=target.getContext('2d');context.drawImage(gpu,0,0);lettering(context,w,h,showWords);
+ const context=target.getContext('2d');context.drawImage(gpu,0,0);return lettering(context,w,h,showWords);
 }
-function preview(){const w=Math.max(1,Math.round(canvas.getBoundingClientRect().width*Math.min(devicePixelRatio||1,1.5)));render(canvas,w,Math.round(w/ratio),state.time);canvas.dataset.frame=state.time.toFixed(3);canvas.dataset.parameter=state.value.toFixed(2);canvas.dataset.words=String(state.words);dirty=false;}
+function preview(){const w=Math.max(1,Math.round(canvas.getBoundingClientRect().width*Math.min(devicePixelRatio||1,1.5)));const layout=render(canvas,w,Math.round(w/ratio),state.time);canvas.dataset.textFits=String(layout.ok);$('layout-warning').hidden=layout.ok;$('layout-warning').textContent=layout.ok?'':layout.issues.join('；')+'。请重新安排阅读区，或取得节选/分页选择。未绘制溢出文字，带字导出将被阻止。';canvas.dataset.frame=state.time.toFixed(3);canvas.dataset.parameter=state.value.toFixed(2);canvas.dataset.words=String(state.words);dirty=false;}
 $('pause').onclick=()=>{state.paused=!state.paused;pairTime=null;controls();};
 $('words').onclick=()=>{state.words=!state.words;controls();};
 $('parameter').oninput=()=>{state.value=Number($('parameter').value)/100;pairTime=null;dirty=true;};
@@ -125,7 +180,7 @@ function download(blob,extension,showWords){const url=URL.createObjectURL(blob),
 function blobFromCanvas(target){return new Promise((resolve,reject)=>target.toBlob(blob=>blob?resolve(blob):reject(new Error('无法生成图片')),'image/png'));}
 async function exportPng(showWords){
  state.busy=true;controls();status(`正在生成 ${imageW} × ${imageH} 图片…`);
- try{await document.fonts.ready;const out=document.createElement('canvas');render(out,imageW,imageH,exportTime(),showWords);download(await blobFromCanvas(out),'png',showWords);status(`已生成${showWords?'带字':'无字'} PNG · ${imageW} × ${imageH}`);}
+ try{await document.fonts.ready;const out=document.createElement('canvas');const layout=render(out,imageW,imageH,exportTime(),showWords);if(!layout.ok)throw new Error(layout.issues.join('；'));download(await blobFromCanvas(out),'png',showWords);status(`已生成${showWords?'带字':'无字'} PNG · ${imageW} × ${imageH}`);}
  catch(error){status('图片导出失败：'+error.message);}
  finally{state.busy=false;controls();preview();}
 }
@@ -141,7 +196,7 @@ async function exportVideo(showWords){
  let stream,recorder;
  try{
   await document.fonts.ready;
-  const out=document.createElement('canvas'),duration=delivery.duration_seconds,baseTime=exportTime();render(out,videoW,videoH,baseTime,showWords);
+  const out=document.createElement('canvas'),duration=delivery.duration_seconds,baseTime=exportTime();const layout=render(out,videoW,videoH,baseTime,showWords);if(!layout.ok)throw new Error(layout.issues.join('；'));
   stream=out.captureStream(delivery.fps);
   recorder=new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:5000000});
   const chunks=[];recorder.ondataavailable=e=>{if(e.data.size)chunks.push(e.data);};

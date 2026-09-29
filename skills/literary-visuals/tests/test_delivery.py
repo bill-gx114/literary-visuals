@@ -68,4 +68,37 @@ class DeliveryTests(unittest.TestCase):
             with self.assertRaises(FileExistsError):
                 builder.build(source, ROOT / 'assets/shaders/surge.glsl', result)
 
+class TextTreatmentTests(unittest.TestCase):
+    setUp = DeliveryTests.setUp
+    def test_full_text_cannot_be_silently_shortened(self):
+        self.art['full_text'] = self.art['quote'] + '。'
+        with self.assertRaisesRegex(ValueError, 'complete original'):
+            builder.validate(self.art)
+
+    def test_excerpt_needs_permission_and_exact_text(self):
+        self.art['full_text'] = '前文。' + self.art['quote'] + '。后文。'
+        self.art['text_selection'] = {'mode': 'excerpt'}
+        with self.assertRaisesRegex(ValueError, 'explicit or delegated'):
+            builder.validate(self.art)
+        self.art['text_selection']['approval'] = 'delegated'
+        self.assertEqual(builder.validate(self.art)['quote'], self.art['quote'])
+        self.art['quote'] = '改写的金句'
+        with self.assertRaisesRegex(ValueError, 'verbatim'):
+            builder.validate(self.art)
+
+    def test_long_text_is_not_forced_to_excerpt(self):
+        self.art['quote'] = '长文原样保留。' * 100
+        self.art['full_text'] = self.art['quote']
+        self.art['typography']['position'] = 'bottom-left'
+        self.assertEqual(builder.validate(self.art)['text_selection']['mode'], 'full')
+
+    def test_invalid_layout_is_rejected(self):
+        for fields in ({'size':.016}, {'size':float('nan')}, {'size':'small'},
+                       {'box':[.9,.1,.2,.5]}, {'box':[0,0,-1,.5]},
+                       {'box':[0,0,.8,float('nan')]}, {'caption_box':[0,0,1]},
+                       {'line_height':1}, {'color':None}):
+            with self.subTest(fields=fields):
+                art=copy.deepcopy(self.art);art['typography'].update(fields)
+                with self.assertRaises(ValueError): builder.validate(art)
+
 if __name__ == '__main__': unittest.main()

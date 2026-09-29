@@ -13,12 +13,90 @@
 <figure><canvas id="art" role="img"></canvas><p id="error" role="alert" hidden></p></figure>
 <div class="row"><button id="pause" type="button" aria-pressed="false">暂停动效</button><button id="words" type="button" aria-pressed="false">隐去文字</button><label class="parameter"><span id="parameter-label"></span><input id="parameter" type="range" min="0" max="100" aria-label="画面参数"></label></div>
 <div id="export-row" class="row"><button id="png" type="button">保存高清图片</button><button id="png-alt" type="button" hidden>保存无字图片</button><button id="video" type="button">导出 12 秒视频</button><button id="video-alt" type="button" hidden>导出无字视频</button><button id="cancel" type="button" hidden>取消录制</button></div>
+<p id="layout-warning" role="alert" hidden></p>
 <p id="status" aria-live="polite"></p>
 <details><summary>文字出处与创作说明</summary><p id="source-note"></p><div id="source-links"></div></details>
 </main>
 <script>
 const SPEC={"title": "涌 · 时间的切面", "slug": "surge", "quote": "星垂平野阔\n月涌大江流", "intent": "细密层理与广阔色域形成尺度反差，朱砂与墨色的切面缓慢推进。", "source": {"status": "confirmed", "label": "杜甫《旅夜书怀》", "context_note": "2026-09-28 对照全诗核实。前有独夜舟，后以天地间沙鸥自况；本次以细密层理与广阔空域的反差表达尺度和漂泊感，矿物配色是艺术选择。", "urls": ["https://zh.wikisource.org/wiki/旅夜書懷"]}, "caption": "杜甫《旅夜书怀》", "typography": {"position": "top-right-vertical", "color": "#f1deba"}, "parameter": {"label": "流势", "uniform": "force", "default": 0.55}, "uniforms": {"mode": 2}, "start_time": 14, "delivery": {"formats": ["png", "mp4", "html"], "ratio": "4:5", "text_mode": "with", "image_size": [1600, 2000], "video_size": [720, 900], "duration_seconds": 12, "fps": 24, "audio": "none"}};
 const FRAGMENT="precision highp float;\nuniform vec2 res;uniform float time;uniform float force;uniform int mode;\nfloat hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}\nfloat noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(hash(i),hash(i+vec2(1,0)),f.x),mix(hash(i+vec2(0,1)),hash(i+1.),f.x),f.y);}\nfloat fbm(vec2 p){float v=0.;float a=.5;for(int i=0;i\u003c5;i++){v+=a*noise(p);p=mat2(1.6,-1.2,1.2,1.6)*p+3.71;a*=.5;}return v;}\nfloat gauss(float x,float w){return exp(-x*x/w);}\nvoid main(){\nvec2 uv=gl_FragCoord.xy/res;vec2 p=vec2(uv.x,1.-uv.y);float t=time;float grain=hash(gl_FragCoord.xy);vec3 col;\nif(mode==0){\nfloat center=.56+.025*sin(t*.18);float weight=(.085+force*.095)*gauss(p.x-center,.075);\nfloat flow=.010*sin(p.x*7.-t*.26)+.004*sin(p.x*19.+t*.16);\nfloat y=.48+weight+flow;\nfloat d=p.y-y;\ncol=vec3(.024,.043,.071);\nfloat atmosphere=gauss(d+.025,.011)*(.3+.7*gauss(p.x-.53,.12));\ncol+=vec3(.052,.105,.145)*atmosphere;\nfloat under=gauss(d-.105,.019)*(.5+.5*noise(vec2(p.x*2.-t*.035,p.y*9.)));\ncol+=vec3(.012,.033,.056)*under;\nfloat light=0.;for(int i=0;i\u003c44;i++){\nfloat j=float(i)/43.;float ribbon=y-(1.-j)*(.065+.032*cos(p.x*5.+j*2.))+.002*sin(p.x*24.+j*11.+t*.1);\nfloat line=gauss(p.y-ribbon,.0000007+res.y*.00000000025);\nfloat attenuation=pow(j,2.)*(.25+.75*gauss(p.x-.52,.15));light+=line*attenuation*.20;\n}\ncol+=vec3(.62,.68,.67)*light;\nfloat edge=gauss(d,.0000012)*(.23+.5*gauss(p.x-.64,.06));col+=vec3(.83,.77,.59)*edge;\nfloat dust=noise(vec2(p.x*230.,p.y*4.))*noise(vec2(p.x*600.,p.y*3.));\ncol+=vec3(.042,.060,.074)*dust*gauss(d+.06,.003);\ncol+=vec3(.055,.07,.09)*(grain-.5);\ncol*=.83+.17*sin(p.x*3.14159);\n}else if(mode==1){\nfloat paper=fbm(p*9.);col=vec3(.902,.887,.842)+(paper-.5)*.045+(grain-.5)*.044;\nfloat ink=0.;float breathing=sin(t*.20)*.018;\nfor(int i=0;i\u003c72;i++){\nfloat j=float(i)/71.;float a=.14+force*.14;\nfloat bell=gauss(p.x-(.61+breathing),.10);\nfloat arc=.65+(j-.5)*.082 + a*bell*(j-.50)*2.5 + .025*sin(p.x*5.+j*2.+t*.12);\narc+=.003*sin(p.x*25.+j*11.+t*.15)*bell;\nfloat line=gauss(p.y-arc,.00000010+1./(res.y*res.y)*.13);\nfloat variation=.32+.68*noise(vec2(j*78.,p.x*12.));\nink+=line*variation*(.30+.22*sin(j*3.14));\n}\nfloat fade=.82+.18*sin(p.x*3.14);col=mix(col,vec3(.19,.235,.22),clamp(ink*fade,0.,.82));\nfloat trace=gauss(p.y-(.735+.010*sin(p.x*5.+t*.1)),.00000015)*.21;\ncol=mix(col,vec3(.40,.39,.32),trace);\n}else{\nvec2 q=vec2(p.x*1.7,p.y*1.15);\nfloat w=fbm(q*2.+vec2(t*.018,-t*.012));\nfloat v=fbm(q*4.+vec2(w*2.,t*.018));\nfloat s=p.x*.95+p.y*.48+(.17+force*.12)*(w-.5)+.045*sin(p.y*8.+t*.14);\nfloat body=s+.07*(v-.5);\ncol=vec3(.34,.115,.073);\ncol=mix(col,vec3(.66,.23,.12),smoothstep(.13,.52,body));\ncol=mix(col,vec3(.76,.38,.18),smoothstep(.50,.65,body));\ncol=mix(col,vec3(.055,.092,.093),smoothstep(.70,.715,body));\ncol=mix(col,vec3(.115,.15,.14),smoothstep(.93,1.10,body));\nfloat veins=sin(body*680.+v*12.);float veins2=sin(body*310.+w*20.);\nfloat metal=pow(max(0.,veins),15.)*(.4+.6*v);\nfloat region=1.-smoothstep(.70,.73,body);\ncol+=vec3(.17,.12,.055)*metal*region;\ncol-=vec3(.085,.05,.027)*pow(max(0.,veins2),6.)*region;\nfloat border=gauss(body-.711,.000035);col+=vec3(.59,.40,.14)*border;\nfloat second=gauss(body-.96,.0000006);col+=vec3(.20,.25,.21)*second;\nfloat mineral=fbm(p*180.);col+=(mineral-.5)*.095+(grain-.5)*.065;\ncol*=.80+.20*sin(p.y*3.14159);\n}\ngl_FragColor=vec4(clamp(col,0.,1.),1.);\n}\n";
+/* Shared by browser preview, export and Node layout tests. No automatic shrinking. */
+const LiteraryLettering = (() => {
+  'use strict';
+  const font = size => `400 ${size}px "Songti SC", "STSong", "Noto Serif CJK SC", serif`;
+  const closing = /^[，。！？；：、…）】》」』,.!?;:%]/u;
+  const opening = /[（【《「『(]$/u;
+  function wrap(text, maxWidth, context) {
+    const lines = [];
+    for (const paragraph of text.split('\n')) {
+      let line = '';
+      const tokens = paragraph.match(/[\p{Script=Latin}\d]+(?:['’-][\p{Script=Latin}\d]+)*|[^\S\n]+|[^\s]/gu) || [];
+      function add(token) {
+        if (!line || context.measureText(line + token).width <= maxWidth) { line += token; return; }
+        if (!token.trim()) { lines.push(line.trimEnd()); line = ''; return; }
+        let carry = '';
+        if (closing.test(token) || opening.test(line)) {
+          const chars = Array.from(line.trimEnd());
+          carry = chars.pop() || '';
+          line = chars.join('');
+        }
+        if (line) lines.push(line.trimEnd());
+        line = carry + token;
+      }
+      for (const token of tokens) {
+        if (context.measureText(token).width > maxWidth) Array.from(token).forEach(add);
+        else add(token);
+      }
+      lines.push(line.trimEnd());
+    }
+    return lines;
+  }
+  const rect = (box, w, h) => ({x:box[0]*w,y:box[1]*h,w:box[2]*w,h:box[3]*h});
+  function layout(spec, w, h, context) {
+    const text = spec.typography, base = Math.min(w,h);
+    const size = base * (text.size || .0375), lineHeight = size * (text.line_height || 1.9);
+    const vertical = text.position === 'top-right-vertical';
+    const box = rect(text.box || (vertical ? [.09,.085,.82,.68] : [.09,.09,.82,.70]),w,h);
+    const commands = [], issues = [];
+    const captionBox = rect(text.caption_box || [.09,.83,.82,.10],w,h);
+    const captionSize = base * .026;
+    if (spec.caption) {
+      context.font = font(captionSize);
+      const lines = wrap(spec.caption, captionBox.w, context), step = captionSize*1.5;
+      const height = lines.length*step;
+      if (height>captionBox.h || lines.some(s=>context.measureText(s).width>captionBox.w+.01)) issues.push('署名超出预留区域');
+      lines.forEach((value,i)=>commands.push({text:value,x:captionBox.x,y:captionBox.y+captionBox.h-height+i*step,size:captionSize,color:text.caption_color||text.color||'#e0dacd',caption:true}));
+    }
+    context.font = font(size);
+    if (vertical) {
+      const groups=spec.quote.split('\n'), columnStep=size*2.2;
+      const width=(groups.length-1)*columnStep+size;
+      if(width>box.w || groups.some(s=>Array.from(s).length*size*1.45>box.h)) issues.push('竖排原文超出预留区域');
+      groups.forEach((line,i)=>Array.from(line).forEach((value,j)=>commands.push({text:value,x:box.x+box.w-size-i*columnStep,y:box.y+j*size*1.45,size,color:text.color||'#e0dacd'})));
+    } else {
+      const lines=wrap(spec.quote,box.w,context),height=lines.length*lineHeight;
+      if(height>box.h || lines.some(s=>context.measureText(s).width>box.w+.01)) issues.push('原文超出预留阅读区域');
+      const y=text.position==='bottom-left'?box.y+box.h-height:box.y;
+      lines.forEach((value,i)=>commands.push({text:value,x:box.x,y:y+i*lineHeight,size,color:text.color||'#e0dacd'}));
+    }
+    // Actual line boxes, not just font height: typography must not collide with its caption.
+    const quoteCommands=commands.filter(c=>!c.caption&&c.text);
+    for(const c of commands.filter(c=>c.caption&&c.text)) {
+      context.font=font(c.size);const cw=context.measureText(c.text).width;
+      if(quoteCommands.some(q=>{context.font=font(q.size);const qw=context.measureText(q.text).width;return q.x<c.x+cw&&q.x+qw>c.x&&q.y<c.y+c.size*1.5&&q.y+(vertical?q.size*1.45:lineHeight)>c.y;})) {issues.push('原文与署名重叠');break;}
+    }
+    return {ok:issues.length===0,issues,commands,size};
+  }
+  function draw(context, result) {
+    if(!result.ok) return; // Never draw clipped text or silently substitute a smaller size.
+    context.save();context.textBaseline='top';context.textAlign='left';
+    for(const command of result.commands){context.font=font(command.size);context.fillStyle=command.color;context.globalAlpha=command.caption?.85:1;context.fillText(command.text,command.x,command.y);}
+    context.restore();
+  }
+  return {wrap,layout,draw};
+})();
+if(typeof module!=='undefined'&&module.exports)module.exports=LiteraryLettering;
+
 (()=>{
 'use strict';
 const $=id=>document.getElementById(id);
@@ -74,33 +152,10 @@ try{
  ['res','time','force','evening','mode'].forEach(name=>loc[name]=gl.getUniformLocation(program,name));
  canvas.dataset.ready='true';
 }catch(error){console.error(error);fail('画面编译失败，无法导出。请让创作工具检查着色器。');return;}
-function wrap(text,maxWidth,context){
- const lines=[];String(text).split('\n').forEach(paragraph=>{let line='';for(const ch of Array.from(paragraph)){if(context.measureText(line+ch).width>maxWidth&&line){lines.push(line);line=ch;}else line+=ch;}lines.push(line);});return lines;
-}
 function lettering(context,w,h,showWords){
- if(!showWords)return;
- const text=SPEC.typography,color=text.color||'#e0dacd';
- const x=w*.09,maxWidth=w*.82;
- const base=Math.min(w,h);
- let size=base*(text.size||.0375),lines,lineHeight;
- if(text.position==='top-right-vertical')size=Math.min(size,h*.68/(Math.max(...SPEC.quote.split('\n').map(line=>Array.from(line).length))*1.45));
- context.fillStyle=color;context.textBaseline='top';
- do{
-  context.font=`400 ${size}px "Songti SC", "STSong", "Noto Serif CJK SC", serif`;
-  lines=wrap(SPEC.quote,maxWidth,context);lineHeight=size*1.9;
-  if(text.position==='top-right-vertical'||lines.length*lineHeight<=h*.60||size<=base*.016)break;
-  size*=.94;
- }while(true);
- let y=text.position==='bottom-left'?h*.79-lines.length*lineHeight:h*.09;
- if(text.position==='top-right-vertical'){
-  let column=w*.89-size;
-  const groups=SPEC.quote.split('\n');
-  groups.forEach(line=>{let yy=h*.085;Array.from(line).forEach(ch=>{context.fillText(ch,column,yy);yy+=size*1.45;});column-=size*2.2;});
- }else lines.forEach(line=>{context.fillText(line,x,y);y+=lineHeight;});
- if(SPEC.caption){context.font=`400 ${base*.021}px "Songti SC", "STSong", serif`;context.fillStyle=text.caption_color||color;context.globalAlpha=.85;
-  const captionLines=wrap(SPEC.caption,maxWidth,context);let cy=h*.93-captionLines.length*base*.031;
-  captionLines.forEach(line=>{context.fillText(line,x,cy);cy+=base*.031;});context.globalAlpha=1;
- }
+ if(!showWords)return {ok:true,issues:[]};
+ const result=LiteraryLettering.layout(SPEC,w,h,context);
+ LiteraryLettering.draw(context,result);return result;
 }
 function render(target,w,h,t,showWords=state.words){
  if(gpu.width!==w||gpu.height!==h){gpu.width=w;gpu.height=h;}
@@ -111,9 +166,9 @@ function render(target,w,h,t,showWords=state.words){
  gl.uniform1i(loc.mode,SPEC.uniforms.mode??0);
  gl.drawArrays(gl.TRIANGLES,0,6);
  if(target.width!==w||target.height!==h){target.width=w;target.height=h;}
- const context=target.getContext('2d');context.drawImage(gpu,0,0);lettering(context,w,h,showWords);
+ const context=target.getContext('2d');context.drawImage(gpu,0,0);return lettering(context,w,h,showWords);
 }
-function preview(){const w=Math.max(1,Math.round(canvas.getBoundingClientRect().width*Math.min(devicePixelRatio||1,1.5)));render(canvas,w,Math.round(w/ratio),state.time);canvas.dataset.frame=state.time.toFixed(3);canvas.dataset.parameter=state.value.toFixed(2);canvas.dataset.words=String(state.words);dirty=false;}
+function preview(){const w=Math.max(1,Math.round(canvas.getBoundingClientRect().width*Math.min(devicePixelRatio||1,1.5)));const layout=render(canvas,w,Math.round(w/ratio),state.time);canvas.dataset.textFits=String(layout.ok);$('layout-warning').hidden=layout.ok;$('layout-warning').textContent=layout.ok?'':layout.issues.join('；')+'。请重新安排阅读区，或取得节选/分页选择。未绘制溢出文字，带字导出将被阻止。';canvas.dataset.frame=state.time.toFixed(3);canvas.dataset.parameter=state.value.toFixed(2);canvas.dataset.words=String(state.words);dirty=false;}
 $('pause').onclick=()=>{state.paused=!state.paused;pairTime=null;controls();};
 $('words').onclick=()=>{state.words=!state.words;controls();};
 $('parameter').oninput=()=>{state.value=Number($('parameter').value)/100;pairTime=null;dirty=true;};
@@ -125,7 +180,7 @@ function download(blob,extension,showWords){const url=URL.createObjectURL(blob),
 function blobFromCanvas(target){return new Promise((resolve,reject)=>target.toBlob(blob=>blob?resolve(blob):reject(new Error('无法生成图片')),'image/png'));}
 async function exportPng(showWords){
  state.busy=true;controls();status(`正在生成 ${imageW} × ${imageH} 图片…`);
- try{await document.fonts.ready;const out=document.createElement('canvas');render(out,imageW,imageH,exportTime(),showWords);download(await blobFromCanvas(out),'png',showWords);status(`已生成${showWords?'带字':'无字'} PNG · ${imageW} × ${imageH}`);}
+ try{await document.fonts.ready;const out=document.createElement('canvas');const layout=render(out,imageW,imageH,exportTime(),showWords);if(!layout.ok)throw new Error(layout.issues.join('；'));download(await blobFromCanvas(out),'png',showWords);status(`已生成${showWords?'带字':'无字'} PNG · ${imageW} × ${imageH}`);}
  catch(error){status('图片导出失败：'+error.message);}
  finally{state.busy=false;controls();preview();}
 }
@@ -141,7 +196,7 @@ async function exportVideo(showWords){
  let stream,recorder;
  try{
   await document.fonts.ready;
-  const out=document.createElement('canvas'),duration=delivery.duration_seconds,baseTime=exportTime();render(out,videoW,videoH,baseTime,showWords);
+  const out=document.createElement('canvas'),duration=delivery.duration_seconds,baseTime=exportTime();const layout=render(out,videoW,videoH,baseTime,showWords);if(!layout.ok)throw new Error(layout.issues.join('；'));
   stream=out.captureStream(delivery.fps);
   recorder=new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:5000000});
   const chunks=[];recorder.ondataavailable=e=>{if(e.data.size)chunks.push(e.data);};

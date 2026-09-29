@@ -70,8 +70,24 @@ def validate(spec):
             raise ValueError(f'{key} must be a nonempty string')
     if not re.fullmatch(r'[a-z0-9][a-z0-9-]{0,63}', spec['slug']):
         raise ValueError('slug must be lowercase ASCII letters, digits and hyphens')
-    if len(spec['title']) > 80 or len(spec['quote']) > 600:
-        raise ValueError('title or display quote is too long; choose an excerpt for the artwork')
+    if len(spec['title']) > 80 or len(spec['quote']) > 6000:
+        raise ValueError('title exceeds 80 characters or quote exceeds single-canvas limit (6000); use a multi-page renderer without discarding text')
+    if 'full_text' in spec:
+        full = spec['full_text']
+        if not isinstance(full, str) or not full.strip():
+            raise ValueError('full_text must be a nonempty string')
+        selection = spec.setdefault('text_selection', {'mode': 'full'})
+        if not isinstance(selection, dict) or selection.get('mode') not in ('full', 'excerpt'):
+            raise ValueError('text_selection.mode must be full or excerpt')
+        if selection['mode'] == 'full' and spec['quote'] != full:
+            raise ValueError('full text mode must preserve the complete original text')
+        if selection['mode'] == 'excerpt':
+            if selection.get('approval') not in ('explicit', 'delegated'):
+                raise ValueError('excerpt requires explicit or delegated text selection')
+            if spec['quote'] not in full:
+                raise ValueError('excerpt must be a verbatim continuous part of full_text')
+    elif 'text_selection' in spec:
+        raise ValueError('text_selection requires full_text')
     source = spec.get('source', {})
     if not isinstance(source, dict):
         raise ValueError('source must be an object')
@@ -115,14 +131,21 @@ def validate(spec):
         raise ValueError('invalid typography.position')
     if not isinstance(spec.get('caption', ''), str) or len(spec.get('caption', '')) > 180:
         raise ValueError('caption must be a string of at most 180 characters')
-    if 'size' in typography and not .02 <= typography['size'] <= .065:
-        raise ValueError('typography.size must be between .02 and .065')
+    if 'size' in typography and (type(typography['size']) not in (int, float) or not .032 <= typography['size'] <= .065):
+        raise ValueError('typography.size must be between .032 and .065; redesign rather than shrinking body text')
+    if 'line_height' in typography and (type(typography['line_height']) not in (int, float) or not 1.35 <= typography['line_height'] <= 2.2):
+        raise ValueError('typography.line_height must be between 1.35 and 2.2')
+    for key in ('box', 'caption_box'):
+        if key in typography:
+            box = typography[key]
+            if not isinstance(box, list) or len(box) != 4 or any(type(n) not in (int, float) or not math.isfinite(n) for n in box):
+                raise ValueError(f'typography.{key} must be a finite [x, y, width, height] array')
+            x, y, width, height = box
+            if x < 0 or y < 0 or width <= 0 or height <= 0 or x + width > 1 or y + height > 1:
+                raise ValueError(f'typography.{key} must fit inside the normalized canvas')
     for key in ('color', 'caption_color'):
-        if key in typography and not re.fullmatch(r'#[0-9a-fA-F]{6}', typography[key]):
+        if key in typography and (not isinstance(typography[key], str) or not re.fullmatch(r'#[0-9a-fA-F]{6}', typography[key])):
             raise ValueError(f'typography.{key} must be a hex color')
-    if typography['position'] == 'top-right-vertical':
-        if len(spec['quote'].splitlines()) > 5 or any(len(line) > 17 for line in spec['quote'].splitlines()):
-            raise ValueError('vertical text exceeds artwork space; shorten it or choose horizontal text')
     normalize_delivery(spec)
     return spec
 
@@ -137,7 +160,7 @@ def build(spec_path, shader_path, output, force=False):
     if len(shader) > 200_000 or not re.search(r'void\s+main\s*\(', shader):
         raise ValueError('shader must contain main() and be under 200 KB')
     template = (ROOT / 'assets/viewer.html').read_text(encoding='utf-8')
-    substitutions = {'__TITLE__': html.escape(spec['title']), '__SPEC__': js_json(spec), '__SHADER__': js_json(shader), '__RUNTIME__': (ROOT / 'assets/runtime.js').read_text(encoding='utf-8')}
+    substitutions = {'__TITLE__': html.escape(spec['title']), '__SPEC__': js_json(spec), '__SHADER__': js_json(shader), '__RUNTIME__': (ROOT / 'assets/lettering.js').read_text(encoding='utf-8') + '\n' + (ROOT / 'assets/runtime.js').read_text(encoding='utf-8')}
     rendered = re.sub('|'.join(map(re.escape, substitutions)), lambda match: substitutions[match[0]], template)
     output.parent.mkdir(parents=True, exist_ok=True)
     with output.open('w' if force else 'x', encoding='utf-8') as handle:

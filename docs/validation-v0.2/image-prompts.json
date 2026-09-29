@@ -1,0 +1,14 @@
+{
+  "tool": "built-in imagegen",
+  "purpose": "art-direction smoke test; not final literary deliverables",
+  "prompts": [
+    {
+      "slug": "joy",
+      "prompt": "Use case: illustration-story. Create a portrait 3:4 fine art print responding to the ORIGINAL evaluation sentence: 风一来，晾衣绳上的白衬衫就争着做帆。 Do not render any text. Make wind and cloth tension visibly legible: four loosely suggested white cotton shirts clipped to two taut diagonal clotheslines, cropping near and far shirts differently, their fabric swelling in a common direction like eager sails without turning into actual boats. Close low upward view; no characters or sea. Vibrant cobalt-blue clear sky, sunny vermilion roof sliver at lower left, warm creamy whites. Sophisticated reduction woodcut / hand-cut stencil print, assertive broad flat shapes, irregular hand-inked edges, rhythm of compressed and expanded white forms; sparse precise fabric folds. Energetic, bright, playful, tactile, not sentimental or melancholy. Balanced asymmetric composition; no generic particles, no distressed sepia, no text or watermark. Motion is implied through cloth pull, not motion-blur."
+    },
+    {
+      "slug": "paradox",
+      "prompt": "Use case: stylized-concept. Create a square 1:1 fine-art conceptual sculpture photograph responding to the ORIGINAL evaluation sentence: 每一把锁，都把自己的钥匙关在里面。 No text. A large geometric closed locking enclosure made from matte chalk-white ceramic on a deep cool charcoal studio ground, viewed obliquely close-up. The enclosure has a precisely cut narrow inspection window: inside it, visibly captive, rests a small dark brass key that could unlock this very enclosure but cannot be reached through the aperture. A second small matching closed enclosure is partially visible behind it, with another captive key, establishing repetition without clutter. The relation between a locked shell, its insufficient opening, and the key imprisoned inside is the whole idea. Use an austere architectural locking form rather than an ordinary glossy padlock product shot. Thin crisp shadows, diffuse raking light, restrained mineral white and tarnished metal, accurate material weight, tension between perfect geometric simplicity and impossible self-containment. Deliberate non-centered composition, two scales of enclosure. No people, no starfield, no books, no mist, no decorative typography, no watermark."
+    }
+  ]
+}

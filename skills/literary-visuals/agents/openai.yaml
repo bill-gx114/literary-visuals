@@ -1,4 +1,4 @@
 interface:
   display_name: "文学意象转译"
-  short_description: "先选择风格、格式、平台画幅和文字版本，再核对出处并创作文学视觉作品"
-  default_prompt: "使用 $literary-visuals，先让我选择画面表达、交付形式、尺寸和是否带字，再核对出处并转译这段文字。"
+  short_description: "按长短文本、意象与感受选择多变的视觉表达，核对出处并检查画文契合度"
+  default_prompt: "使用 $literary-visuals，先让我选择画面表达、交付形式、尺寸和是否带字，再根据文本长度、意象关系与情绪转折选择合适风格，创作并检查画文契合度。"

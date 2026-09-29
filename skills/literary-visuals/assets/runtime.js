@@ -53,33 +53,10 @@ try{
  ['res','time','force','evening','mode'].forEach(name=>loc[name]=gl.getUniformLocation(program,name));
  canvas.dataset.ready='true';
 }catch(error){console.error(error);fail('画面编译失败，无法导出。请让创作工具检查着色器。');return;}
-function wrap(text,maxWidth,context){
- const lines=[];String(text).split('\n').forEach(paragraph=>{let line='';for(const ch of Array.from(paragraph)){if(context.measureText(line+ch).width>maxWidth&&line){lines.push(line);line=ch;}else line+=ch;}lines.push(line);});return lines;
-}
 function lettering(context,w,h,showWords){
- if(!showWords)return;
- const text=SPEC.typography,color=text.color||'#e0dacd';
- const x=w*.09,maxWidth=w*.82;
- const base=Math.min(w,h);
- let size=base*(text.size||.0375),lines,lineHeight;
- if(text.position==='top-right-vertical')size=Math.min(size,h*.68/(Math.max(...SPEC.quote.split('\n').map(line=>Array.from(line).length))*1.45));
- context.fillStyle=color;context.textBaseline='top';
- do{
-  context.font=`400 ${size}px "Songti SC", "STSong", "Noto Serif CJK SC", serif`;
-  lines=wrap(SPEC.quote,maxWidth,context);lineHeight=size*1.9;
-  if(text.position==='top-right-vertical'||lines.length*lineHeight<=h*.60||size<=base*.016)break;
-  size*=.94;
- }while(true);
- let y=text.position==='bottom-left'?h*.79-lines.length*lineHeight:h*.09;
- if(text.position==='top-right-vertical'){
-  let column=w*.89-size;
-  const groups=SPEC.quote.split('\n');
-  groups.forEach(line=>{let yy=h*.085;Array.from(line).forEach(ch=>{context.fillText(ch,column,yy);yy+=size*1.45;});column-=size*2.2;});
- }else lines.forEach(line=>{context.fillText(line,x,y);y+=lineHeight;});
- if(SPEC.caption){context.font=`400 ${base*.021}px "Songti SC", "STSong", serif`;context.fillStyle=text.caption_color||color;context.globalAlpha=.85;
-  const captionLines=wrap(SPEC.caption,maxWidth,context);let cy=h*.93-captionLines.length*base*.031;
-  captionLines.forEach(line=>{context.fillText(line,x,cy);cy+=base*.031;});context.globalAlpha=1;
- }
+ if(!showWords)return {ok:true,issues:[]};
+ const result=LiteraryLettering.layout(SPEC,w,h,context);
+ LiteraryLettering.draw(context,result);return result;
 }
 function render(target,w,h,t,showWords=state.words){
  if(gpu.width!==w||gpu.height!==h){gpu.width=w;gpu.height=h;}
@@ -90,9 +67,9 @@ function render(target,w,h,t,showWords=state.words){
  gl.uniform1i(loc.mode,SPEC.uniforms.mode??0);
  gl.drawArrays(gl.TRIANGLES,0,6);
  if(target.width!==w||target.height!==h){target.width=w;target.height=h;}
- const context=target.getContext('2d');context.drawImage(gpu,0,0);lettering(context,w,h,showWords);
+ const context=target.getContext('2d');context.drawImage(gpu,0,0);return lettering(context,w,h,showWords);
 }
-function preview(){const w=Math.max(1,Math.round(canvas.getBoundingClientRect().width*Math.min(devicePixelRatio||1,1.5)));render(canvas,w,Math.round(w/ratio),state.time);canvas.dataset.frame=state.time.toFixed(3);canvas.dataset.parameter=state.value.toFixed(2);canvas.dataset.words=String(state.words);dirty=false;}
+function preview(){const w=Math.max(1,Math.round(canvas.getBoundingClientRect().width*Math.min(devicePixelRatio||1,1.5)));const layout=render(canvas,w,Math.round(w/ratio),state.time);canvas.dataset.textFits=String(layout.ok);$('layout-warning').hidden=layout.ok;$('layout-warning').textContent=layout.ok?'':layout.issues.join('；')+'。请重新安排阅读区，或取得节选/分页选择。未绘制溢出文字，带字导出将被阻止。';canvas.dataset.frame=state.time.toFixed(3);canvas.dataset.parameter=state.value.toFixed(2);canvas.dataset.words=String(state.words);dirty=false;}
 $('pause').onclick=()=>{state.paused=!state.paused;pairTime=null;controls();};
 $('words').onclick=()=>{state.words=!state.words;controls();};
 $('parameter').oninput=()=>{state.value=Number($('parameter').value)/100;pairTime=null;dirty=true;};
@@ -104,7 +81,7 @@ function download(blob,extension,showWords){const url=URL.createObjectURL(blob),
 function blobFromCanvas(target){return new Promise((resolve,reject)=>target.toBlob(blob=>blob?resolve(blob):reject(new Error('无法生成图片')),'image/png'));}
 async function exportPng(showWords){
  state.busy=true;controls();status(`正在生成 ${imageW} × ${imageH} 图片…`);
- try{await document.fonts.ready;const out=document.createElement('canvas');render(out,imageW,imageH,exportTime(),showWords);download(await blobFromCanvas(out),'png',showWords);status(`已生成${showWords?'带字':'无字'} PNG · ${imageW} × ${imageH}`);}
+ try{await document.fonts.ready;const out=document.createElement('canvas');const layout=render(out,imageW,imageH,exportTime(),showWords);if(!layout.ok)throw new Error(layout.issues.join('；'));download(await blobFromCanvas(out),'png',showWords);status(`已生成${showWords?'带字':'无字'} PNG · ${imageW} × ${imageH}`);}
  catch(error){status('图片导出失败：'+error.message);}
  finally{state.busy=false;controls();preview();}
 }
@@ -120,7 +97,7 @@ async function exportVideo(showWords){
  let stream,recorder;
  try{
   await document.fonts.ready;
-  const out=document.createElement('canvas'),duration=delivery.duration_seconds,baseTime=exportTime();render(out,videoW,videoH,baseTime,showWords);
+  const out=document.createElement('canvas'),duration=delivery.duration_seconds,baseTime=exportTime();const layout=render(out,videoW,videoH,baseTime,showWords);if(!layout.ok)throw new Error(layout.issues.join('；'));
   stream=out.captureStream(delivery.fps);
   recorder=new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:5000000});
   const chunks=[];recorder.ondataavailable=e=>{if(e.data.size)chunks.push(e.data);};

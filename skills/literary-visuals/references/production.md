@@ -14,7 +14,7 @@ python3 scripts/build_artwork.py --spec references/examples/surge.json --shader 
 
 ## 将选择写入制作规格
 
-先把用户选择存到 `request.json`，再将可执行字段写入作品 JSON 的 `delivery`：
+先把用户选择存到 `request.json`，并按 `references/text-treatment.md` 保存完整文本与实际展示范围；再将可执行字段写入作品 JSON 的 `delivery`：
 
 ```json
 {
@@ -46,7 +46,12 @@ python3 scripts/build_artwork.py --spec references/examples/surge.json --shader 
 - `caption`：印在收藏图上的简短署名。无法核实作者时省略或只写“文本意象试作”。
 - `typography.position`：`top-left`、`bottom-left`、`top-right-vertical`。
 - `typography.color`、`caption_color`：六位十六进制文字色，结合画面实测对比度。
-- `typography.size`：画幅宽度的比例，默认 0.0375。长摘抄宜选取短句显示，完整输入可放在研究记录中，不强塞画面。
+- `full_text`：完整输入；新作品带字时应保留。`quote` 为实际显示的连续原文。
+- `text_selection`：`{"mode":"full"}` 要求 `quote` 与 `full_text` 一致；`{"mode":"excerpt","approval":"explicit"}` 或 `delegated` 要求取得相应选句授权且为原文连续片段。旧规格可省略这两项以兼容历史案例，不能借兼容接口回避新作的文字约定。
+- `typography.size`：`min(width,height)` 的比例，默认 0.0375，范围 0.032–0.065。不自动缩字；长文本先设计阅读区域，确实有冲突再处理全文/节选/分页选择。
+- `typography.box`：归一化 `[x,y,width,height]`，原文的可用阅读区。横排默认 `[.09,.09,.82,.70]`，竖排默认 `[.09,.085,.82,.68]`；底部对齐只在该框内对齐。
+- `typography.caption_box`：署名区域，默认 `[.09,.83,.82,.10]`。同样必须位于画布内。
+- `typography.line_height`：字号倍数，1.35–2.2，默认 1.9。
 - `parameter`：`label`、`uniform`（`force` 或 `evening`）、`default`（0–1）。
 - `uniforms`：可固定设置 `mode`、`force`、`evening`。
 - `start_time`：初始艺术时间，秒。
@@ -69,6 +74,25 @@ uniform int mode;
 ## 图片
 
 网页图片导出采用 `delivery.image_size`，包含所选文字版本和参数。不包含控件。导出在当前艺术时间点定格；先暂停可精确选帧。画面和导出采用同一排版函数。
+
+中文标点和英文词边界参与断行，保留显式段落。字体按规格固定；容量不足或与署名重叠时，预览显示警告，带字导出报错。不能把缺字图片当作成功；切换无字版仍可检查构图。这不是自动分页器，也不会擅自节选。
+
+预留区示例（需与本次画面共同设计，不是长文固定模板）：
+
+```json
+{
+  "typography": {
+    "position": "bottom-left",
+    "box": [0.08, 0.38, 0.84, 0.42],
+    "caption_box": [0.08, 0.84, 0.84, 0.08],
+    "size": 0.035,
+    "line_height": 1.5,
+    "color": "#30382f"
+  }
+}
+```
+
+构建器验证数值范围和文字约定；真实字体的行数与重叠由浏览器检查。允许较长 `quote` 不等于保证单张放得下，容量通过也不等于对比度或图文关系合格。使用其他排版器、图像生成路线或视频剪辑时同样检查可读性与原文。
 
 浏览器字体会影响字形，当前包使用系统中文宋体回退，没有嵌入字体。跨设备要求完全相同排版时，另行取得合适字体并检查授权，或把最终 PNG/视频作为分享版本。
 
