@@ -4,17 +4,24 @@
 
 一个用于诗歌、小说、散文与摘抄的 Skill，附三个动态案例与一支使用 Remotion 制作的 64 秒简介短片。
 
-[下载简介视频](https://github.com/bill-gx114/literary-visuals/releases/download/v0.1.0/literary-visuals-intro.mp4) · [下载 Skill](https://github.com/bill-gx114/literary-visuals/releases/download/v0.2.0/literary-visuals.zip) · [最新 Skill 发行版](https://github.com/bill-gx114/literary-visuals/releases/tag/v0.2.0)
+[下载简介视频](https://github.com/bill-gx114/literary-visuals/releases/download/v0.1.0/literary-visuals-intro.mp4) · [下载 Skill](https://github.com/bill-gx114/literary-visuals/releases/download/v0.3.0/literary-visuals.zip) · [最新 Skill 发行版](https://github.com/bill-gx114/literary-visuals/releases/tag/v0.3.0)
 
 ![简介短片分镜](docs/storyboard.png)
 
 ## 创作方法
 
 1. **先选择**：通过宿主交互框确认画面表达、图片／视频／HTML、带平台用途提示的尺寸，以及带字／无字版本。已提供的选项不重复问。
-2. **查出处**：核对原作与上下文，区分已核实、译本未确认和出处未知。
+2. **查出处与语境**：核对原作、作者相关风格及写作时期的视觉文化，区分作者时代、故事时代与后世改编；时代资料辅助选择，不固定复古。
 3. **分型与锚定**：长短文本决定阅读方案；缺席、动作、记忆、悖论等关系决定视觉锚点。长度不直接绑定风格。
 4. **比较再创作**：内部比较构图和表达机制不同的方向，选择适合文本的媒介，不固定抽象、复古或相同主体。
 5. **看图后修正**：用去字、换句、并置检查画文关系；长文不自动缩成小字，全文与授权节选分别校验。
+6. **交付与解析**：成品后固定说明文本核心、画面对应、风格依据与文字构图取舍，附必要出处链接。解析也单独保存，无字作品同样有外部解析。
+
+## v0.3 的研究与解析规则
+
+新增作者与时代视觉文化检索、三条时间线区分、固定成品解析。研究事实保存为 `research.md`，创作决定保存在 `art-direction.json`，面向读者的解析保存为 `interpretation.md`。不将事后查到的作品伪装为原生成参考。
+
+[出处与语境](skills/literary-visuals/references/provenance.md) · [解析规范](skills/literary-visuals/references/interpretation.md) · [v0.3 验证范围](docs/validation-v0.3.md)
 
 ## v0.2 的实际验证
 
@@ -40,7 +47,7 @@
 
 下载 Release 中的 `literary-visuals.zip`，解压后将 `literary-visuals` 文件夹放入支持本地 Skill 的 Agent 技能目录。Codex 默认目录为 `~/.codex/skills/`。
 
-v0.2.0 安装包与仓库 `skills/literary-visuals/` 同步，包含文本分型、风格决策、视觉验收和文字容量保护。没有交互框工具的宿主会使用文字选项，也支持“由你决定，直接做”。
+v0.3.0 安装包与仓库 `skills/literary-visuals/` 同步，包含文本分型、作者与时代研究、风格决策、成品解析、视觉验收和文字容量保护。没有交互框工具的宿主会使用文字选项，也支持“由你决定，直接做”。
 
 > 使用 $literary-visuals，把这段文字转成适合收藏分享的动态作品：……
 
